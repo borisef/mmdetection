@@ -33,8 +33,14 @@ train_detector(model, datasets, cfg, distributed=False, validate=True)
 
 #try on one image:
 
-img = mmcv.imread(cfg.example_image)
-
+imgs = cfg.example_images
 model.cfg = cfg
-result = inference_detector(model, img)
-show_result_pyplot(model, img, result,score_thr=0.2 , out_file='try.jpg')
+
+for ima in imgs:
+    im = mmcv.imread(ima)
+    result = inference_detector(model, im)
+    ouf = osp.join(cfg.work_dir, 'imgs', osp.basename(ima))
+    try:
+        show_result_pyplot(model, im, result,score_thr=0.2 , out_file=ouf)
+    except:
+        pass

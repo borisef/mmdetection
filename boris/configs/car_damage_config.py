@@ -1,6 +1,6 @@
 num_classes = 5
 CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
-example_image = '/home/borisef/datasets/car_damage/img/10.jpg'
+
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -251,3 +251,7 @@ gpu_ids = range(0, 1)
 
 custom_imports=dict(
     imports=['mmdetection.boris.kitti_Dataset'])
+
+example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
+                  '/home/borisef/datasets/car_damage/val/22.jpg',
+                  '/home/borisef/datasets/car_damage/val/3.jpg']
