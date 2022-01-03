@@ -1,6 +1,7 @@
 num_classes = 3
 CLASSES = ('Car', 'Pedestrian', 'Cyclist')
 example_images = ['/home/borisef/projects/mmdetHack/datasets/kitti_tiny/training/image_2/000068.jpeg']
+
 model = dict(
     type='FasterRCNN',
     backbone=dict(
