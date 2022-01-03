@@ -1,6 +1,6 @@
-num_classes = 3
-CLASSES = ('Car', 'Pedestrian', 'Cyclist')
-example_image = '/home/borisef/projects/mmdetHack/datasets/kitti_tiny/training/image_2/000068.jpeg'
+num_classes = 5
+CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
+example_image = '/home/borisef/datasets/car_damage/img/10.jpg'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -106,8 +106,8 @@ model = dict(
             score_thr=0.05,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)))
-dataset_type = 'KittiTinyDataset'
-data_root = 'kitti_tiny/'
+dataset_type = 'CocoDataset'
+data_root = 'car_damage/'
 img_norm_cfg = dict(
     mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
@@ -153,9 +153,10 @@ data = dict(
     samples_per_gpu=1,
     workers_per_gpu=0,
     train=dict(
-        type='KittiTinyDataset',
-        ann_file='train.txt',
-        img_prefix='training/image_2',
+        type='CocoDataset',
+        ann_file='train/COCO_mul_train_annos.json',
+        img_prefix='train/',
+        classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
@@ -175,11 +176,12 @@ data = dict(
             dict(type='DefaultFormatBundle'),
             dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
         ],
-        data_root='/home/borisef/projects/mmdetHack/datasets/kitti_tiny/'),
+        data_root='/home/borisef/projects/mmdetHack/datasets/car_damage/'),
     val=dict(
-        type='KittiTinyDataset',
-        ann_file='val.txt',
-        img_prefix='training/image_2',
+        type='CocoDataset',
+        ann_file='val/COCO_mul_val_annos.json',
+        img_prefix='val/',
+        classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
@@ -199,11 +201,12 @@ data = dict(
                     dict(type='Collect', keys=['img'])
                 ])
         ],
-        data_root='/home/borisef/projects/mmdetHack/datasets/kitti_tiny/'),
+        data_root='/home/borisef/datasets/car_damage/'),
     test=dict(
-        type='KittiTinyDataset',
-        ann_file='train.txt',
-        img_prefix='training/image_2',
+        type='CocoDataset',
+        ann_file='val/COCO_mul_val_annos.json',
+        img_prefix='val/',
+        classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
@@ -223,8 +226,8 @@ data = dict(
                     dict(type='Collect', keys=['img'])
                 ])
         ],
-        data_root='/home/borisef/projects/mmdetHack/datasets/kitti_tiny/'))
-evaluation = dict(interval=12, metric='mAP')
+        data_root='/home/borisef/datasets/car_damage/'))
+#evaluation = dict(interval=12, metric='mAP')
 optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
@@ -233,7 +236,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=0.001,
     step=[8, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=12)
+runner = dict(type='EpochBasedRunner', max_epochs=5)
 checkpoint_config = dict(interval=12)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
@@ -242,7 +245,7 @@ log_level = 'INFO'
 load_from = '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
 workflow = [('train', 1)]
-work_dir = '../tutorial_exps'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try1'
 seed = 0
 gpu_ids = range(0, 1)
 

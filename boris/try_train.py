@@ -13,12 +13,12 @@ from mmdet.apis import train_detector
 
 
 
-cfg_file = 'configs/kiti_config.py'
+#cfg_file = 'configs/kiti_config.py'
+cfg_file = 'configs/car_damage_config.py'
 cfg = Config.fromfile(cfg_file)
 
 # Build dataset
 datasets = [build_dataset(cfg.data.train)]
-
 # Build the detector
 model = build_detector(
     cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
@@ -33,8 +33,8 @@ train_detector(model, datasets, cfg, distributed=False, validate=True)
 
 #try on one image:
 
-img = mmcv.imread('../demo/kitti_tiny/training/image_2/000068.jpeg')
+img = mmcv.imread(cfg.example_image)
 
 model.cfg = cfg
 result = inference_detector(model, img)
-show_result_pyplot(model, img, result,score_thr=0.0)#, out_file='try.jpg')
+show_result_pyplot(model, img, result,score_thr=0.2 , out_file='try.jpg')
