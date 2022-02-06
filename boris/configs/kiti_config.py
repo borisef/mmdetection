@@ -18,6 +18,10 @@ model = dict(
             checkpoint='open-mmlab://detectron2/resnet50_caffe')),
     neck=dict(
         type='FPN',
+        #type = 'PAFPN',
+        #type = 'FPN_CARAFE',
+        #type = 'HRFPN', # memory
+        #type = 'NASFPN', stack_times = 0,
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5),
@@ -25,6 +29,7 @@ model = dict(
         type='RPNHead',
         in_channels=256,
         feat_channels=256,
+        num_convs = 2, #TRY B
         anchor_generator=dict(
             type='AnchorGenerator',
             scales=[8],
@@ -35,20 +40,21 @@ model = dict(
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)#,
+        #loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+    ),
     roi_head=dict(
         type='StandardRoIHead',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            roi_layer=dict(type='RoIAlign', output_size=9, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
             type='Shared2FCBBoxHead',
             in_channels=256,
             fc_out_channels=1024,
-            roi_feat_size=7,
+            roi_feat_size=9,
             num_classes=num_classes,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
@@ -69,7 +75,7 @@ model = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',
-                num=256,
+                num=333,
                 pos_fraction=0.5,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=False),
@@ -90,8 +96,8 @@ model = dict(
                 match_low_quality=False,
                 ignore_iof_thr=-1),
             sampler=dict(
-                type='RandomSampler',
-                num=512,
+                type='OHEMSampler',
+                num=510,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
@@ -243,9 +249,19 @@ log_level = 'INFO'
 load_from = '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
 workflow = [('train', 1)]
-work_dir = '../tutorial_exps'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try2'
 seed = 0
 gpu_ids = range(0, 1)
 
+expHook = dict(
+    type='ExperimentalHook',
+    a=1,
+    b=None,
+    outDir = work_dir + '/exp_out'
+)
+
+custom_hooks = [expHook]
+
+
 custom_imports=dict(
-    imports=['mmdetection.boris.kitti_Dataset'])
+    imports=['mmdetection.boris.kitti_Dataset', 'mmdetection.boris.experimental_hook'])

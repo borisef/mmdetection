@@ -58,6 +58,8 @@ class RPNHead(AnchorHead):
                                  1)
         self.rpn_reg = nn.Conv2d(self.feat_channels, self.num_base_priors * 4,
                                  1)
+        self.rpn_my_cls = nn.Conv2d(self.feat_channels,
+                                 1, 1) #TRY B
 
     def forward_single(self, x):
         """Forward feature map of a single scale level."""
@@ -65,6 +67,7 @@ class RPNHead(AnchorHead):
         x = F.relu(x, inplace=True)
         rpn_cls_score = self.rpn_cls(x)
         rpn_bbox_pred = self.rpn_reg(x)
+        #rpn_my_score = self.rpn_my_cls(x) #TRY B
         return rpn_cls_score, rpn_bbox_pred
 
     def loss(self,

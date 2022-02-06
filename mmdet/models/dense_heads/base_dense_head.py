@@ -9,6 +9,7 @@ from mmcv.runner import BaseModule, force_fp32
 from mmdet.core.utils import filter_scores_and_topk, select_single_mlvl
 
 
+
 class BaseDenseHead(BaseModule, metaclass=ABCMeta):
     """Base class for DenseHeads."""
 
@@ -327,7 +328,10 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 losses: (dict[str, Tensor]): A dictionary of loss components.
                 proposal_list (list[Tensor]): Proposals of each image.
         """
-        outs = self(x)
+        outs = self(x) # B: outs are [objectness , bboxes] , one tensor per stride
+        objectness = outs[0]
+        # sizes of objectness : bs, 1 x scales x ratios, w, h (before sigmoid) ?
+        #size of bboxes: bs, 4 x scales x ratios, w, h
         if gt_labels is None:
             loss_inputs = outs + (gt_bboxes, img_metas)
         else:
@@ -338,7 +342,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         else:
             proposal_list = self.get_bboxes(
                 *outs, img_metas=img_metas, cfg=proposal_cfg)
-            return losses, proposal_list
+            #B: TODO return outs for objectness
+            return losses, proposal_list, objectness
 
     def simple_test(self, feats, img_metas, rescale=False):
         """Test function without test-time augmentation.

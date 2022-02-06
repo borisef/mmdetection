@@ -132,7 +132,7 @@ class TwoStageDetector(BaseDetector):
         if self.with_rpn:
             proposal_cfg = self.train_cfg.get('rpn_proposal',
                                               self.test_cfg.rpn)
-            rpn_losses, proposal_list = self.rpn_head.forward_train(
+            rpn_losses, proposal_list, objectness  = self.rpn_head.forward_train(
                 x,
                 img_metas,
                 gt_bboxes,
@@ -141,6 +141,9 @@ class TwoStageDetector(BaseDetector):
                 proposal_cfg=proposal_cfg,
                 **kwargs)
             losses.update(rpn_losses)
+
+            self.last_objectness = objectness  # deep copy ???
+            self.last_image = img[0]
         else:
             proposal_list = proposals
 
@@ -149,6 +152,8 @@ class TwoStageDetector(BaseDetector):
                                                  gt_bboxes_ignore, gt_masks,
                                                  **kwargs)
         losses.update(roi_losses)
+
+
 
         return losses
 

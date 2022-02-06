@@ -13,8 +13,8 @@ from mmdet.apis import train_detector
 
 
 
-#cfg_file = 'configs/kiti_config.py'
-cfg_file = 'configs/car_damage_config.py'
+cfg_file = 'configs/kiti_config.py'
+#cfg_file = 'configs/car_damage_config.py'
 cfg = Config.fromfile(cfg_file)
 
 # Build dataset

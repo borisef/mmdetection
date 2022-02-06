@@ -8,7 +8,7 @@ model = dict(
         depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
+        frozen_stages=-1,
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
@@ -19,16 +19,16 @@ model = dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
-        num_outs=5),
+        num_outs=4), # like num strides
     rpn_head=dict(
         type='RPNHead',
         in_channels=256,
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
-            scales=[8],
+            scales=[8, 16],
             ratios=[0.5, 1.0, 2.0],
-            strides=[4, 8, 16, 32, 64]),
+            strides=[4, 8, 32, 64]),
         bbox_coder=dict(
             type='DeltaXYWHBBoxCoder',
             target_means=[0.0, 0.0, 0.0, 0.0],
@@ -236,7 +236,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=0.001,
     step=[8, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=5)
+runner = dict(type='EpochBasedRunner', max_epochs=15)
 checkpoint_config = dict(interval=12)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
@@ -249,8 +249,19 @@ work_dir = '/home/borisef/projects/mmdetHack/Runs/try1'
 seed = 0
 gpu_ids = range(0, 1)
 
+
+expHook = dict(
+    type='ExperimentalHook',
+    a=1,
+    b=None,
+    outDir = work_dir + '/exp_out'
+)
+
+custom_hooks = [expHook]
+
+
 custom_imports=dict(
-    imports=['mmdetection.boris.kitti_Dataset'])
+    imports=['mmdetection.boris.kitti_Dataset', 'mmdetection.boris.experimental_hook'])
 
 example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
                   '/home/borisef/datasets/car_damage/val/22.jpg',
