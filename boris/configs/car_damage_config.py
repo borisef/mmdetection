@@ -257,11 +257,11 @@ expHook = dict(
     outDir = work_dir + '/exp_out'
 )
 
-custom_hooks = [expHook]
+custom_hooks = []
 
 
 custom_imports=dict(
-    imports=['mmdetection.boris.kitti_Dataset', 'mmdetection.boris.experimental_hook'])
+    imports=['boris.kitti_Dataset', 'boris.experimental_hook'])
 
 example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
                   '/home/borisef/datasets/car_damage/val/22.jpg',

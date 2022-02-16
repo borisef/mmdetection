@@ -11,11 +11,20 @@ from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.apis import train_detector
 
-
+from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 
 cfg_file = 'configs/kiti_config.py'
 #cfg_file = 'configs/car_damage_config.py'
+
+cp = ArgConfigParams() # create inctance of class
+cp.arguments_cfg() #init valid arguments in command line
+args = cp.parser.parse_args()
+if(args.config_file is not None):
+        cfg_file = args.config_file
+
+
 cfg = Config.fromfile(cfg_file)
+cfg = update_config_from_args(cfg, cp) # change parameters based on command line
 
 # Build dataset
 datasets = [build_dataset(cfg.data.train)]
@@ -44,3 +53,4 @@ for ima in imgs:
         show_result_pyplot(model, im, result,score_thr=0.2 , out_file=ouf)
     except:
         pass
+

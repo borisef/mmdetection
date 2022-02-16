@@ -29,7 +29,7 @@ model = dict(
         type='RPNHead',
         in_channels=256,
         feat_channels=256,
-        num_convs = 2, #TRY B
+        #num_convs = 2, #TRY B
         anchor_generator=dict(
             type='AnchorGenerator',
             scales=[8],
@@ -40,8 +40,8 @@ model = dict(
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)#,
-        #loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)
     ),
     roi_head=dict(
         type='StandardRoIHead',
@@ -260,8 +260,8 @@ expHook = dict(
     outDir = work_dir + '/exp_out'
 )
 
-custom_hooks = [expHook]
+custom_hooks = []
 
 
 custom_imports=dict(
-    imports=['mmdetection.boris.kitti_Dataset', 'mmdetection.boris.experimental_hook'])
+    imports=['boris.kitti_Dataset', 'boris.experimental_hook'])
