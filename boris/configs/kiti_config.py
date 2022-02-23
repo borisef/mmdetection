@@ -2,6 +2,12 @@ num_classes = 3
 CLASSES = ('Car', 'Pedestrian', 'Cyclist')
 example_images = ['/home/borisef/projects/mmdetHack/datasets/kitti_tiny/training/image_2/000068.jpeg']
 
+smoothing_T = [[0.7,0.1,0.1,0.1],
+               [0.1,0.7,0.1,0.1],
+               [0.1,0.1,0.7,0.1],
+               [0.1,0.1,0.1,0.7]]
+
+
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -40,7 +46,7 @@ model = dict(
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=2.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)
     ),
     roi_head=dict(
@@ -61,8 +67,15 @@ model = dict(
                 target_means=[0.0, 0.0, 0.0, 0.0],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
             reg_class_agnostic=False,
+            # loss_cls=dict(
+            #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_cls=dict(
-                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                 type='SmoothedLoss',
+                 smoothing = 0.1,
+                 smoothing_transform = smoothing_T,
+                 use_sigmoid=False,
+                 loss_func = 'kl_div', #'CrossEntropyLoss', 'BCEWithLogitsLoss', 'kl_div', 'MultiLabelSoftMarginLoss'
+                 loss_weight=1.5),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0))),
     train_cfg=dict(
         rpn=dict(
@@ -157,7 +170,7 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=1,
+    samples_per_gpu=2,
     workers_per_gpu=0,
     train=dict(
         type='KittiTinyDataset',
@@ -264,4 +277,5 @@ custom_hooks = []
 
 
 custom_imports=dict(
-    imports=['boris.kitti_Dataset', 'boris.experimental_hook'])
+    imports=['boris.kitti_Dataset', 'boris.experimental_hook',
+             'boris.smoothed_loss'])
