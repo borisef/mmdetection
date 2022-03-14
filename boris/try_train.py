@@ -11,10 +11,13 @@ from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.apis import train_detector
 
+from mmdet.apis.train import  set_random_seed
+
 from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 
-cfg_file = 'configs/kiti_config.py'
-#cfg_file = 'configs/car_damage_config.py'
+#cfg_file = 'configs/kiti_config.py'
+cfg_file = 'configs/car_damage_config.py'
+#cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
 
 cp = ArgConfigParams() # create inctance of class
 cp.arguments_cfg() #init valid arguments in command line
@@ -34,7 +37,7 @@ model = build_detector(
 
 # Add an attribute for visualization convenience
 model.CLASSES = datasets[0].CLASSES
-
+set_random_seed(42)
 # Create work_dir
 mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
 train_detector(model, datasets, cfg, distributed=False, validate=True)

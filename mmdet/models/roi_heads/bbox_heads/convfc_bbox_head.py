@@ -2,7 +2,7 @@
 import torch.nn as nn
 from mmcv.cnn import ConvModule
 
-from mmdet.models.builder import HEADS
+from mmdet.models.builder import HEADS, build_loss
 from mmdet.models.utils import build_linear_layer
 from .bbox_head import BBoxHead
 
@@ -65,6 +65,8 @@ class ConvFCBBoxHead(BBoxHead):
         self.cls_convs, self.cls_fcs, self.cls_last_dim = \
             self._add_conv_fc_branch(
                 self.num_cls_convs, self.num_cls_fcs, self.shared_out_channels)
+
+        #TODO: B: add da_cls specifiv branch
 
         # add reg specific branch
         self.reg_convs, self.reg_fcs, self.reg_last_dim = \
@@ -173,7 +175,7 @@ class ConvFCBBoxHead(BBoxHead):
         # separate branches
         x_cls = x
         x_reg = x
-
+#TODO: B: x_da_cls
         for conv in self.cls_convs:
             x_cls = conv(x_cls)
         if x_cls.dim() > 2:
@@ -191,9 +193,10 @@ class ConvFCBBoxHead(BBoxHead):
             x_reg = x_reg.flatten(1)
         for fc in self.reg_fcs:
             x_reg = self.relu(fc(x_reg))
-
+# TODO: B: same for x_da_cls
         cls_score = self.fc_cls(x_cls) if self.with_cls else None
         bbox_pred = self.fc_reg(x_reg) if self.with_reg else None
+# TODO: B: da_cls_score = self.fc_da_cls(x_da_cls) if self.with_da_cls else None
         return cls_score, bbox_pred
 
 
@@ -211,6 +214,27 @@ class Shared2FCBBoxHead(ConvFCBBoxHead):
             fc_out_channels=fc_out_channels,
             *args,
             **kwargs)
+
+@HEADS.register_module() #TODO: copy to another file
+class Shared2FCBBoxHeadWithDomainAdaptation(ConvFCBBoxHead):
+
+    def __init__(self, fc_out_channels=1024,
+                 loss_domain_cls=dict(
+                     type='CrossEntropyLoss',
+                     use_sigmoid=False,
+                     loss_weight=1.0),
+                 *args, **kwargs):
+        super(Shared2FCBBoxHeadWithDomainAdaptation, self).__init__(
+            num_shared_convs=0,
+            num_shared_fcs=2,
+            num_cls_convs=0,
+            num_cls_fcs=0,
+            num_reg_convs=0,
+            num_reg_fcs=0,
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)
+        self.loss_domain_cls = build_loss(loss_domain_cls)
 
 
 @HEADS.register_module()

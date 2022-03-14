@@ -74,7 +74,7 @@ model = dict(
                  smoothing = 0.1,
                  smoothing_transform = smoothing_T,
                  use_sigmoid=False,
-                 loss_func = 'kl_div', #'CrossEntropyLoss', 'BCEWithLogitsLoss', 'kl_div', 'MultiLabelSoftMarginLoss'
+                 loss_func = 'CrossEntropyLoss', #'CrossEntropyLoss', 'BCEWithLogitsLoss', 'kl_div', 'MultiLabelSoftMarginLoss'
                  loss_weight=1.5),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0))),
     train_cfg=dict(

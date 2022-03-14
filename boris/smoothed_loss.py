@@ -140,7 +140,7 @@ class SmoothedLoss(nn.Module):
 
 
             self.loss_func_to_call = kl #TODO nn.functional.kl_div(nn.functional.softmax(pred, dim=2),label1, reduction = 'batchmean')
-            #assert False, "Not implemented kl_div"
+            assert False, "Not implemented kl_div"
         elif self.loss_func is "MultiLabelSoftMarginLoss":
             self.loss_func_to_call = nn.MultiLabelSoftMarginLoss(weight=self.class_weight, reduction =self.reduction)
         elif self.loss_func is "CrossEntropyLoss":

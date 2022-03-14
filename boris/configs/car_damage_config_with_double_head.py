@@ -12,10 +12,9 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
-        # init_cfg=dict(
-        #     type='Pretrained',
-        #     checkpoint='open-mmlab://detectron2/resnet50_caffe')
-    ),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='open-mmlab://detectron2/resnet50_caffe')),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -38,31 +37,52 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='StandardRoIHead',
+        type='DoubleHeadRoIHead',
+        reg_roi_scale_factor=1.3,
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            type='Shared2FCBBoxHead',
-            #type='Shared2FCBBoxHeadWithDomainAdaptation', #TODO
+            #_delete_=True,
+            type='DoubleConvFCBBoxHead',
+            num_convs=1,
+            num_fcs=1,
             in_channels=256,
-            fc_out_channels=1024,
+            conv_out_channels=256,
+            fc_out_channels=256,
             roi_feat_size=7,
             num_classes=num_classes,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
-                target_means=[0.0, 0.0, 0.0, 0.0],
+                target_means=[0., 0., 0., 0.],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
             reg_class_agnostic=False,
             loss_cls=dict(
-                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-            # loss_domain_cls = dict( #TODO
-            #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-        )),
-
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))),
+    # roi_head_old=dict(
+    #     type='StandardRoIHead',
+    #     bbox_roi_extractor=dict(
+    #         type='SingleRoIExtractor',
+    #         roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+    #         out_channels=256,
+    #         featmap_strides=[4, 8, 16, 32]),
+    #     bbox_head=dict(
+    #         type='Shared2FCBBoxHead',
+    #         in_channels=256,
+    #         fc_out_channels=1024,
+    #         roi_feat_size=7,
+    #         num_classes=num_classes,
+    #         bbox_coder=dict(
+    #             type='DeltaXYWHBBoxCoder',
+    #             target_means=[0.0, 0.0, 0.0, 0.0],
+    #             target_stds=[0.1, 0.1, 0.2, 0.2]),
+    #         reg_class_agnostic=False,
+    #         loss_cls=dict(
+    #             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+    #         loss_bbox=dict(type='L1Loss', loss_weight=1.0))),
     train_cfg=dict(
         rpn=dict(
             assigner=dict(
@@ -235,23 +255,23 @@ data = dict(
         data_root='/home/borisef/datasets/car_damage/'))
 #evaluation = dict(interval=12, metric='mAP')
 optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup=None,
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[1,100])
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+    step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=15)
 checkpoint_config = dict(interval=12)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None# '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
+load_from = '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
 workflow = [('train', 1)]
-work_dir = '/home/borisef/projects/mmdetHack/Runs/try3'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try1'
 seed = 0
 gpu_ids = range(0, 1)
 
@@ -260,10 +280,10 @@ expHook = dict(
     type='ExperimentalHook',
     a=1,
     b=None,
-    outDir = work_dir + '/exp_out_01'
+    outDir = work_dir + '/exp_out'
 )
 
-custom_hooks = [expHook]
+custom_hooks = []
 
 
 custom_imports=dict(
