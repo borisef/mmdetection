@@ -6,7 +6,9 @@ import os, sys
 import cv2
 
 from matplotlib import pyplot as plt
-
+def save_filters_in_image(t, outName):
+    arr = visTensor(t.cpu(), ch=0, allkernels=True)
+    plt.imsave(outName, arr)
 
 
 def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1):
@@ -109,10 +111,15 @@ class ExperimentalHook(Hook):
         t1 = t.cpu().data.numpy().copy()
         self.keepFilters.append(t1)
 
+        t0 = runner.model.module.backbone.layer4[0].conv2.weight.clone()
 
-        arr = visTensor(t.cpu(), ch=0, allkernels=False)
-        outName = os.path.join(self.outDir , str(runner.epoch) + ".jpg")
-        plt.imsave(outName, arr)
+
+        outName = os.path.join(self.outDir , str(runner.epoch) + "_f1.jpg")
+        save_filters_in_image(t, outName)
+
+        outName = os.path.join(self.outDir, str(runner.epoch) + "_f2.jpg")
+        save_filters_in_image(t0, outName)
+
         # plt.axis('off')
         # plt.ioff()
         # plt.show()
