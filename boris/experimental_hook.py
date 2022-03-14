@@ -7,7 +7,7 @@ import cv2
 
 from matplotlib import pyplot as plt
 def save_filters_in_image(t, outName):
-    arr = visTensor(t.cpu(), ch=0, allkernels=True)
+    arr = visTensor(t.cpu(), ch=0, allkernels=False)
     plt.imsave(outName, arr)
 
 
