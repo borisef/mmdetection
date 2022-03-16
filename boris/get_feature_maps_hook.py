@@ -7,6 +7,11 @@ import cv2
 import torch.nn.functional as F
 import torch.nn as nn
 
+
+
+def save_lines(nz, output_file):
+    pass
+
 def squeeze_fm(feature_map):
     feature_map = feature_map.squeeze(0)
     gray_scale = torch.sum(feature_map, 0)
@@ -91,9 +96,8 @@ class FeatureMapHook(Hook):
             conv_activation = activation[ff]
             out_im_name = os.path.join(self.outDir, str(runner.epoch) + "_" + ff + ".jpg")
             save_im_fm(conv_activation, out_im_name)
-            pass
 
-            #TODO: save as im
+
 
         for ff in self.relu_filters:
             relu_activation = activation[ff]
@@ -102,8 +106,11 @@ class FeatureMapHook(Hook):
             ratio_nz = non_zeros/np.array(relu_activation.shape).prod()
             save_im_fm(relu_activation, out_im_name)
             self.keep_nz.append([runner.epoch,ratio_nz, ff])
-            pass
-            #TODO: save as im
+            print(self.keep_nz)
+
+        # TODO: save as im
+        save_lines(self.keep_nz, os.path.join(self.outDir, str(runner.epoch) + "_non_zeros" +  ".jpg"))
+
 
         pass
 
