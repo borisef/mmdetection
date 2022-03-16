@@ -263,11 +263,20 @@ expHook = dict(
     outDir = work_dir + '/exp_out_01'
 )
 
-custom_hooks = [expHook]
+fmHook = dict(
+    conv_filters = ['backbone.conv1'],
+    relu_filters = ['backbone.relu'],
+    outDir = work_dir + '/exp_out_fm',
+    imName = None,
+    type = 'FeatureMapHook'
+)
+custom_hooks = [expHook, fmHook]
 
 
 custom_imports=dict(
-    imports=['boris.kitti_Dataset', 'boris.experimental_hook'])
+    imports=['boris.kitti_Dataset',
+             'boris.experimental_hook',
+             'boris.get_feature_maps_hook'])
 
 example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
                   '/home/borisef/datasets/car_damage/val/22.jpg',
