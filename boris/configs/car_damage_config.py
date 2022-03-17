@@ -119,6 +119,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadDomainAnnotations', per_bbox=False, name="domain_id"),#BE
     dict(
         type='Resize',
         img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -133,7 +134,8 @@ train_pipeline = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    dict(type='MyFormatBundle', key_names=['domain_id']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels','gt_domains'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -166,6 +168,7 @@ data = dict(
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
+            dict(type='LoadDomainAnnotations', per_bbox=False, name="domain_id"),
             dict(
                 type='Resize',
                 img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -180,7 +183,8 @@ data = dict(
                 to_rgb=False),
             dict(type='Pad', size_divisor=32),
             dict(type='DefaultFormatBundle'),
-            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+            dict(type='MyFormatBundle', key_names=['gt_domains']),
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_domains'])
         ],
         data_root='/home/borisef/projects/mmdetHack/datasets/car_damage/'),
     val=dict(
