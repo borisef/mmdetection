@@ -280,7 +280,9 @@ custom_hooks = [expHook, fmHook]
 custom_imports=dict(
     imports=['boris.kitti_Dataset',
              'boris.experimental_hook',
-             'boris.get_feature_maps_hook'])
+             'boris.get_feature_maps_hook',
+             'boris.user_loading',
+             'boris.user_formating'])
 
 example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
                   '/home/borisef/datasets/car_damage/val/22.jpg',
