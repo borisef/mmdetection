@@ -16,7 +16,8 @@ from mmdet.apis.train import  set_random_seed
 from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 
 #cfg_file = 'configs/kiti_config.py'
-cfg_file = 'configs/car_damage_config.py'
+#cfg_file = 'configs/car_damage_config.py'
+cfg_file = 'configs/traffic_config.py'
 #cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
 
 cp = ArgConfigParams() # create inctance of class

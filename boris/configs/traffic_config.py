@@ -1,5 +1,6 @@
-num_classes = 5
-CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
+num_classes = 12
+CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft',
+           'trafficLight-Red','trafficLight-RedLeft','trafficLight-Yellow','trafficLight-YellowLeft','truck']
 
 model = dict(
     type='FasterRCNN',
@@ -8,7 +9,7 @@ model = dict(
         depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
-        frozen_stages=-1,
+        frozen_stages=1,
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
@@ -46,7 +47,6 @@ model = dict(
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
             type='Shared2FCBBoxHead',
-            #type='Shared2FCBBoxHeadWithDomainAdaptation', #TODO
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
@@ -59,8 +59,7 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-            # loss_domain_cls = dict( #TODO
-            #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+
         )),
 
     train_cfg=dict(
@@ -113,13 +112,12 @@ model = dict(
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)))
 dataset_type = 'CocoDataset'
-data_root = 'car_damage/'
+data_root = '/home/borisef/datasets/traffic/'
 img_norm_cfg = dict(
     mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadDomainAnnotations', per_bbox=False, name="domain_id"),#BE
     dict(
         type='Resize',
         img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -134,8 +132,7 @@ train_pipeline = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='MyFormatBundle', key_names=['domain_id']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels','gt_domains'])
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -159,16 +156,15 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=0,
+    workers_per_gpu=2,
     train=dict(
         type='CocoDataset',
-        ann_file='train/COCO_mul_train_annos_1.json',
-        img_prefix='train/',
+        ann_file='set_100/data.json',
+        img_prefix='set_100/',
         classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
-            dict(type='LoadDomainAnnotations', per_bbox=False, name="domain_id"),
             dict(
                 type='Resize',
                 img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -183,14 +179,13 @@ data = dict(
                 to_rgb=False),
             dict(type='Pad', size_divisor=32),
             dict(type='DefaultFormatBundle'),
-            dict(type='MyFormatBundle', key_names=['gt_domains']),
-            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_domains'])
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
         ],
-        data_root='/home/borisef/projects/mmdetHack/datasets/car_damage/'),
+        data_root='/home/borisef/datasets/traffic/'),
     val=dict(
         type='CocoDataset',
-        ann_file='val/COCO_mul_val_annos.json',
-        img_prefix='val/',
+        ann_file='set_50/data.json',
+        img_prefix='set_50/',
         classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -211,11 +206,11 @@ data = dict(
                     dict(type='Collect', keys=['img'])
                 ])
         ],
-        data_root='/home/borisef/datasets/car_damage/'),
+        data_root='/home/borisef/datasets/traffic/'),
     test=dict(
         type='CocoDataset',
-        ann_file='val/COCO_mul_val_annos.json',
-        img_prefix='val/',
+        ann_file='set_50/data.json',
+        img_prefix='set_50/',
         classes = CLASSES,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -236,17 +231,17 @@ data = dict(
                     dict(type='Collect', keys=['img'])
                 ])
         ],
-        data_root='/home/borisef/datasets/car_damage/'))
+        data_root='/home/borisef/datasets/traffic/'))
 #evaluation = dict(interval=12, metric='mAP')
-optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(
     policy='step',
     warmup=None,
-    warmup_iters=500,
+    warmup_iters=50,
     warmup_ratio=0.001,
     step=[1,100])
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=3)
 checkpoint_config = dict(interval=12)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
@@ -254,8 +249,8 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from =  '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
-workflow = [('train', 1)]
-work_dir = '/home/borisef/projects/mmdetHack/Runs/try3'
+workflow = [('train', 5)]
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try4'
 seed = 0
 gpu_ids = range(0, 1)
 
@@ -274,7 +269,7 @@ fmHook = dict(
     imName = None,
     type = 'FeatureMapHook'
 )
-custom_hooks = [expHook, fmHook]
+custom_hooks = []
 
 
 custom_imports=dict(
@@ -284,6 +279,9 @@ custom_imports=dict(
              'boris.user_loading',
              'boris.user_formating'])
 
-example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
-                  '/home/borisef/datasets/car_damage/val/22.jpg',
-                  '/home/borisef/datasets/car_damage/val/3.jpg']
+example_images = [
+    '/home/borisef/datasets/traffic/set_50/1478020338196262458_jpg.rf.lKX7x7yWw2bpXFkPQIYj.jpg',
+    '/home/borisef/datasets/traffic/set_50/1478731902310672496_jpg.rf.uYZkayZQEpALjm2O42ZD.jpg',
+    '/home/borisef/datasets/traffic/set_50/1478732388624341236_jpg.rf.a7450b361b00911d97880792cf131b20.jpg',
+    '/home/borisef/datasets/traffic/set_50/1478732848557848794_jpg.rf.M8JrR5Pg1QmQvKuGupJg.jpg'
+]
