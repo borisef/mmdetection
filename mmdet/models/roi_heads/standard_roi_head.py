@@ -162,9 +162,17 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
 
         bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
                                                   gt_labels, self.train_cfg)
+
         loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
                                         bbox_results['bbox_pred'], rois,
                                         *bbox_targets)
+        #B
+        if(hasattr(self, 'keep_debug_results')):
+            if(self.keep_debug_results):
+                self.debug_results ={}
+                self.debug_results['features'] = bbox_results['bbox_feats'].clone().cpu().detach().numpy()
+                self.debug_results['labels'] = bbox_targets[0].clone().cpu().detach().numpy()
+
 
         bbox_results.update(loss_bbox=loss_bbox)
         return bbox_results

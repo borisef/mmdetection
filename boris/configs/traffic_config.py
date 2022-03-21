@@ -156,7 +156,7 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=2,
+    workers_per_gpu=0,
     train=dict(
         type='CocoDataset',
         ann_file='set_100/data.json',
@@ -269,13 +269,24 @@ fmHook = dict(
     imName = None,
     type = 'FeatureMapHook'
 )
-custom_hooks = []
+
+viz_debugHook = dict(
+    type='VizDebugFeaturesHook',
+    num_classes=num_classes,
+    log_folder=work_dir + '/exp_out_viz',
+    max_per_class=100,
+    model_type='StandardRoIHead',
+    epochs = [0,1,2,3,4]
+)
+
+custom_hooks = [viz_debugHook]
 
 
 custom_imports=dict(
     imports=['boris.kitti_Dataset',
              'boris.experimental_hook',
              'boris.get_feature_maps_hook',
+             'boris.viz_debug_features_hook',
              'boris.user_loading',
              'boris.user_formating'])
 
