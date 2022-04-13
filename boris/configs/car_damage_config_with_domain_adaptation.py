@@ -14,7 +14,8 @@ model = dict(
         style='caffe',
         init_cfg=dict(
             type='Pretrained',
-            checkpoint='open-mmlab://detectron2/resnet50_caffe')),
+            checkpoint='open-mmlab://detectron2/resnet50_caffe')
+    ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -58,8 +59,8 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-            loss_domain_cls = dict( #TODO
-                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+            # loss_domain_cls = dict( #TODO
+            #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
         )),
 
     train_cfg=dict(
@@ -115,9 +116,11 @@ dataset_type = 'CocoDataset'
 data_root = 'car_damage/'
 img_norm_cfg = dict(
     mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
+
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadExtraAnnotations', per_bbox=False, name="domain_id"),#BE
     dict(
         type='Resize',
         img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -132,8 +135,10 @@ train_pipeline = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    dict(type='ExtraFormatBundle', key_names=['domain_id']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels','gt_domains'])
 ]
+
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
@@ -165,6 +170,7 @@ data = dict(
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
+            dict(type='LoadExtraAnnotations', per_bbox=False, name="domain_id"), # load domain_id
             dict(
                 type='Resize',
                 img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
@@ -179,7 +185,8 @@ data = dict(
                 to_rgb=False),
             dict(type='Pad', size_divisor=32),
             dict(type='DefaultFormatBundle'),
-            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+            dict(type='ExtraFormatBundle', key_names=['gt_domains']),
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_domains'])
         ],
         data_root='/home/borisef/projects/mmdetHack/datasets/car_damage/'),
     val=dict(
@@ -234,23 +241,23 @@ data = dict(
         data_root='/home/borisef/datasets/car_damage/'))
 #evaluation = dict(interval=12, metric='mAP')
 optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=None)
+optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(
     policy='step',
     warmup=None,
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[8, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=15)
+    step=[1,100])
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 checkpoint_config = dict(interval=12)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
+load_from =  '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
 workflow = [('train', 1)]
-work_dir = '/home/borisef/projects/mmdetHack/Runs/try1'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try3'
 seed = 0
 gpu_ids = range(0, 1)
 
@@ -259,14 +266,25 @@ expHook = dict(
     type='ExperimentalHook',
     a=1,
     b=None,
-    outDir = work_dir + '/exp_out'
+    outDir = work_dir + '/exp_out_01'
 )
 
-custom_hooks = []
+fmHook = dict(
+    conv_filters = ['backbone.conv1'],
+    relu_filters = ['backbone.relu'],
+    outDir = work_dir + '/exp_out_fm',
+    imName = None,
+    type = 'FeatureMapHook'
+)
+custom_hooks = [expHook, fmHook]
 
 
 custom_imports=dict(
-    imports=['boris.kitti_Dataset', 'boris.experimental_hook'])
+    imports=['boris.kitti_Dataset',
+             'boris.experimental_hook',
+             'boris.get_feature_maps_hook',
+             'boris.user_loading',
+             'boris.user_formating'])
 
 example_images = ['/home/borisef/datasets/car_damage/val/1.jpg',
                   '/home/borisef/datasets/car_damage/val/22.jpg',

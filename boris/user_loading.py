@@ -2,9 +2,9 @@ from mmdet.datasets.pipelines.loading import PIPELINES
 
 #BE
 @PIPELINES.register_module()
-class LoadDomainAnnotations:
+class LoadExtraAnnotations:
     """Load domain annotations.
-    Like LoadDomainAnnotations
+    Like LoadExtraAnnotations
     but instead of labels load index of domain
 
 

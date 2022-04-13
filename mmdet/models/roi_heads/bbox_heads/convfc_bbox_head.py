@@ -80,7 +80,7 @@ class ConvFCBBoxHead(BBoxHead):
                 self.reg_last_dim *= self.roi_feat_area
 
         self.relu = nn.ReLU(inplace=True)
-        # reconstruct fc_cls and fc_reg since input channels are changed
+        # reconstruct fc_cls and fc_reg since input channels are changed #TODO: and fc_domain_cls
         if self.with_cls:
             if self.custom_cls_channels:
                 cls_channels = self.loss_cls.get_cls_channels(self.num_classes)
@@ -97,7 +97,7 @@ class ConvFCBBoxHead(BBoxHead):
                 self.reg_predictor_cfg,
                 in_features=self.reg_last_dim,
                 out_features=out_dim_reg)
-
+        #TODO: B: self.with_da --> self.fc_domain_cls
         if init_cfg is None:
             # when init_cfg is None,
             # It has been set to
@@ -114,6 +114,7 @@ class ConvFCBBoxHead(BBoxHead):
                         dict(name='shared_fcs'),
                         dict(name='cls_fcs'),
                         dict(name='reg_fcs')
+                        #TODO B: init for da branch
                     ])
             ]
 
@@ -217,6 +218,7 @@ class Shared2FCBBoxHead(ConvFCBBoxHead):
 
 @HEADS.register_module() #TODO: copy to another file
 class Shared2FCBBoxHeadWithDomainAdaptation(ConvFCBBoxHead):
+    #like Shared2FCBBoxHead + domain adaptation loss
 
     def __init__(self, fc_out_channels=1024,
                  loss_domain_cls=dict(
@@ -225,7 +227,7 @@ class Shared2FCBBoxHeadWithDomainAdaptation(ConvFCBBoxHead):
                      loss_weight=1.0),
                  *args, **kwargs):
         super(Shared2FCBBoxHeadWithDomainAdaptation, self).__init__(
-            num_shared_convs=0,
+            num_shared_convs=0, #TODO: consider chage parameters  go back to ConvFCBBoxHead
             num_shared_fcs=2,
             num_cls_convs=0,
             num_cls_fcs=0,

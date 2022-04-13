@@ -7,7 +7,7 @@ from .base_roi_head import BaseRoIHead
 from .test_mixins import BBoxTestMixin, MaskTestMixin
 
 
-#B
+#TODO:B: move out
 from torch.autograd import Function
 
 
@@ -429,7 +429,7 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             rois, cls_score, bbox_pred, img_shapes, cfg=rcnn_test_cfg)
 
         return det_bboxes, det_labels
-
+#B:
 @HEADS.register_module()
 class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
     """Same  as StandardRoIHead with extra BBoxHead"""

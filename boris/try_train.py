@@ -17,8 +17,9 @@ from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 
 #cfg_file = 'configs/kiti_config.py'
 #cfg_file = 'configs/car_damage_config.py'
-cfg_file = 'configs/traffic_config.py'
+# cfg_file = 'configs/traffic_config.py'
 #cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
+cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
 
 cp = ArgConfigParams() # create inctance of class
 cp.arguments_cfg() #init valid arguments in command line

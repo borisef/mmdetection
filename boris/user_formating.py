@@ -1,7 +1,7 @@
 from mmdet.datasets.pipelines.formating import PIPELINES, to_tensor, DC
 
 @PIPELINES.register_module()
-class MyFormatBundle:
+class ExtraFormatBundle:
     """
     Like FormatBundle but names are given in key_names
     """
