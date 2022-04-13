@@ -122,3 +122,11 @@ work_dirs/
 *.pth
 *.py~
 *.sh~
+
+
+#git merge
+*_REMOTE_*.py
+*_LOCAL_*.py
+*_BACKUP_*.py
+*_BASE_*.py
+

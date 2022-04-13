@@ -1,6 +1,7 @@
 num_classes = 5
+num_classes_domain_adaptation = 5 #B: TODO
 CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
-
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try4'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -38,15 +39,16 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='StandardRoIHead',
+        #type='StandardRoIHead',
+        type='StandardRoIHeadWithExtraBBoxHead',#B
+        with_grad_reversal = False, #TODO:B: weights of extra head with temperature
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            #type='Shared2FCBBoxHead',
-            type='Shared2FCBBoxHeadWithDomainAdaptation', #TODO
+            type='Shared2FCBBoxHead',
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
@@ -59,9 +61,23 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-            # loss_domain_cls = dict( #TODO
-            #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-        )),
+        ),
+        extra_bbox_head=dict(
+                    type='Shared2FCBBoxHead',
+                    in_channels=256,
+                    fc_out_channels=1024,
+                    roi_feat_size=7,
+                    num_classes=num_classes_domain_adaptation,
+                    bbox_coder=dict(
+                        type='DeltaXYWHBBoxCoder',
+                        target_means=[0.0, 0.0, 0.0, 0.0],
+                        target_stds=[0.1, 0.1, 0.2, 0.2]),
+                    reg_class_agnostic=False,
+                    loss_cls=dict(
+                        type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                    loss_bbox=dict(type='L1Loss', loss_weight=0.0),
+                ),
+        ),
 
     train_cfg=dict(
         rpn=dict(
@@ -257,7 +273,7 @@ log_level = 'INFO'
 load_from =  '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
 resume_from = None
 workflow = [('train', 1)]
-work_dir = '/home/borisef/projects/mmdetHack/Runs/try3'
+
 seed = 0
 gpu_ids = range(0, 1)
 

@@ -123,7 +123,7 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     gt_labels[i],
                     feats=[lvl_feat[i][None] for lvl_feat in x])
                 sampling_results.append(sampling_result)
-
+        self.sampling_results = sampling_results #B: keep for future use
         losses = dict()
         # bbox head forward and loss
         if self.with_bbox:
@@ -438,6 +438,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                  bbox_roi_extractor=None,
                  bbox_head=None,
                  extra_bbox_head=None,
+                 with_grad_reversal = False,
                  mask_roi_extractor=None,
                  mask_head=None,
                  shared_head=None,
@@ -456,9 +457,20 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                  pretrained=pretrained,
                  init_cfg=init_cfg)
         #build extra head
+        if extra_bbox_head is not None:
+            self.init_extra_bbox_head(bbox_roi_extractor, extra_bbox_head)
+            self.with_extra_bbox = True
+        else:
+            self.with_extra_bbox = False
+
+
+        #self.extra_bbox_head = build_head(extra_bbox_head)
+        self.with_grad_reversal = with_grad_reversal
+
+    def init_extra_bbox_head(self, bbox_roi_extractor, extra_bbox_head):
+        """Initialize ``bbox_head``"""
+        self.extra_bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)#TODO: B: may be can use bbox_roi_extractor
         self.extra_bbox_head = build_head(extra_bbox_head)
-        #TODO: add gradient reversal layer(?)
-        self.gradient_rev_layer = None
 
     def forward_train(self,
                       x,
@@ -469,6 +481,8 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                       gt_bboxes_ignore=None,
                       gt_masks=None,
                       **kwargs):
+
+        #B: do StandardRoIHead forward_train first
         roi_losses = super(StandardRoIHeadWithExtraBBoxHead, self).forward_train(x=x,
                                                                     img_metas=img_metas,
                                                                     proposal_list=proposal_list,
@@ -479,47 +493,113 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                                                                     **kwargs)
 
         #TODO: forward train extra_head get loss and append it to roi_losses
+        # assign gts and sample proposals
+        #TODO: B: it was alreday done in father's forward, consider keeping sampling_results
+        sampling_results = self.sampling_results
 
+        # bbox head forward and loss
+        if self.with_extra_bbox:
+
+            gt_extra_labels = gt_labels # TEMP TODO: take care of labels
+            extra_bbox_results = self._extra_bbox_forward_train(x, sampling_results,
+                                                    gt_bboxes, gt_extra_labels,
+                                                    img_metas)
+            #change names in extra_bbox_results['loss_extra_bbox'] to have all losses
+            extra_bbox_results['loss_extra_bbox']['loss_extra_cls'] = extra_bbox_results['loss_extra_bbox']['loss_cls']
+            extra_bbox_results['loss_extra_bbox']['loss_extra_bbox'] = extra_bbox_results['loss_extra_bbox']['loss_bbox']
+            roi_losses.update(extra_bbox_results['loss_extra_bbox'])
         return roi_losses
 
-    def _bbox_forward(self, x, rois):
+    # def _bbox_forward(self, x, rois):
+    #     """Box head forward function used in both training and testing."""
+    #     # TODO: a more flexible way to decide which feature maps to use
+    #     bbox_feats = self.bbox_roi_extractor(
+    #         x[:self.bbox_roi_extractor.num_inputs], rois)
+    #     if self.with_shared_head:
+    #         bbox_feats = self.shared_head(bbox_feats)
+    #     cls_score, bbox_pred = self.bbox_head(bbox_feats)
+    #
+    #     # B: da_cls_score
+    #     grl_lambda = 1.0 #B
+    #     # # Training progress and GRL lambda
+    #     # p = float(batch_idx + epoch_idx * max_batches) / (n_epochs * max_batches)
+    #     # grl_lambda = 2. / (1. + np.exp(-10 * p)) - 1
+    #     reverse_bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda) #B
+    #     extra_cls_score, extra_bbox_pred = self.extra_bbox_head(reverse_bbox_feats) #B
+    #
+    #     bbox_results = dict(
+    #         cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats, extra_cls_score= extra_cls_score, extra_bbox_pred = extra_bbox_pred)
+    #     return bbox_results
+
+    # def _bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
+    #                         img_metas):
+    #     """Run forward function and calculate loss for box head in training."""
+    #     rois = bbox2roi([res.bboxes for res in sampling_results])
+    #     bbox_results = self._bbox_forward(x, rois)
+    #
+    #     bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
+    #                                               gt_labels, self.train_cfg)
+    #     loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
+    #                                     bbox_results['bbox_pred'], rois,
+    #                                     *bbox_targets)
+    #
+    #     extra_loss_bbox = self.extra_bbox_head.loss(bbox_results['extra_cls_score'],
+    #                                     bbox_results['extra_bbox_pred'], rois,
+    #                                     *bbox_targets)#TODO: B replace bbox_targets[0] by other labels
+    #
+    #     loss_bbox.update(loss_cls_extra=extra_loss_bbox['loss_cls']) #TODO: B
+    #     bbox_results.update(loss_bbox=loss_bbox)
+    #     bbox_results.update(loss_bbox_extra=extra_loss_bbox)
+    #     return bbox_results
+
+    def _extra_bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
+                                  img_metas):
+        # B: almost identical to StandardRoIHead._bbox_forward_train: only bbox--> extra_bbox
+        """Run forward function and calculate loss for box head in training."""
+        rois = bbox2roi([res.bboxes for res in sampling_results])
+        extra_bbox_results = self._extra_bbox_forward(x, rois)
+
+        bbox_targets = self.extra_bbox_head.get_targets(sampling_results, gt_bboxes,
+                                                  gt_labels, self.train_cfg)
+
+        loss_extra_bbox = self.extra_bbox_head.loss(extra_bbox_results['cls_score'],
+                                        extra_bbox_results['bbox_pred'], rois,
+                                        *bbox_targets)
+        # B: debug vizualization
+        # if (hasattr(self, 'keep_debug_results')):
+        #     if (self.keep_debug_results):
+        #         if(not hasattr(self,'debug_results')):
+        #             self.debug_results = {}
+        #         self.debug_results['extra_bbox_features'] = extra_bbox_results['bbox_feats'].clone().cpu().detach().numpy()
+        #         self.debug_results['extra_labels'] = bbox_targets[0].clone().cpu().detach().numpy()
+
+        extra_bbox_results.update(loss_extra_bbox=loss_extra_bbox)
+        return extra_bbox_results
+
+    def _extra_bbox_forward(self, x, rois):
         """Box head forward function used in both training and testing."""
         # TODO: a more flexible way to decide which feature maps to use
         bbox_feats = self.bbox_roi_extractor(
             x[:self.bbox_roi_extractor.num_inputs], rois)
-        if self.with_shared_head:
-            bbox_feats = self.shared_head(bbox_feats)
-        cls_score, bbox_pred = self.bbox_head(bbox_feats)
+
+
+
+        #cls_score, bbox_pred = self.bbox_head(bbox_feats)
 
         # B: da_cls_score
-        grl_lambda = 1.0 #B
+        grl_lambda = 1.0  # B
         # # Training progress and GRL lambda
         # p = float(batch_idx + epoch_idx * max_batches) / (n_epochs * max_batches)
         # grl_lambda = 2. / (1. + np.exp(-10 * p)) - 1
-        reverse_bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda) #B
-        extra_cls_score, extra_bbox_pred = self.extra_bbox_head(reverse_bbox_feats) #B
+        if(self.with_grad_reversal):
+            bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda)  # B:plug in GR
+        if self.with_shared_head:
+            bbox_feats = self.shared_head(bbox_feats)
+        extra_cls_score, extra_bbox_pred = self.extra_bbox_head(bbox_feats)  # B
+
 
         bbox_results = dict(
-            cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats, extra_cls_score= extra_cls_score, extra_bbox_pred = extra_bbox_pred)
+            cls_score=extra_cls_score, bbox_pred=extra_bbox_pred, bbox_feats=bbox_feats)
         return bbox_results
 
-    def _bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
-                            img_metas):
-        """Run forward function and calculate loss for box head in training."""
-        rois = bbox2roi([res.bboxes for res in sampling_results])
-        bbox_results = self._bbox_forward(x, rois)
 
-        bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
-                                                  gt_labels, self.train_cfg)
-        loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
-                                        bbox_results['bbox_pred'], rois,
-                                        *bbox_targets)
-
-        extra_loss_bbox = self.extra_bbox_head.loss(bbox_results['extra_cls_score'],
-                                        bbox_results['extra_bbox_pred'], rois,
-                                        *bbox_targets)#TODO: B replace bbox_targets[0] by other labels
-
-        loss_bbox.update(loss_cls_extra=extra_loss_bbox['loss_cls']) #TODO: B
-        bbox_results.update(loss_bbox=loss_bbox)
-        bbox_results.update(loss_bbox_extra=extra_loss_bbox)
-        return bbox_results
