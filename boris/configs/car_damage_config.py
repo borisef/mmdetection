@@ -167,8 +167,10 @@ data = dict(
             dict(type='LoadAnnotations', with_bbox=True),
             dict(
                 type='Resize',
-                img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                           (1333, 768), (1333, 800)],
+                #img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
+                #            (1333, 768), (1333, 800)],
+                img_scale=[(1333, 400), (1333, 450), (1333, 550), (1333, 500),
+                           (1333, 500), (1333, 550)],
                 multiscale_mode='value',
                 keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
@@ -192,6 +194,7 @@ data = dict(
             dict(
                 type='MultiScaleFlipAug',
                 img_scale=(1333, 800),
+                #img_scale=(1333, 400),
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
@@ -217,6 +220,7 @@ data = dict(
             dict(
                 type='MultiScaleFlipAug',
                 img_scale=(1333, 800),
+                #img_scale=(1333, 400),
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),

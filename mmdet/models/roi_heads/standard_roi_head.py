@@ -438,7 +438,12 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                  bbox_roi_extractor=None,
                  bbox_head=None,
                  extra_bbox_head=None,
-                 with_grad_reversal = False,
+                 extra_head_params=None,
+                 extra_head_with_grad_reversal = False, #should insert grad reversal?
+                 extra_head_temprature_params = None,#weight with respect to epoch/iter
+                 extra_head_image_instance_weight=[1, 1],#weight some samples differently (NOT IMPLEMENTED)
+                 extra_head_annotation_per_image = True,
+                 extra_label = None,
                  mask_roi_extractor=None,
                  mask_head=None,
                  shared_head=None,
@@ -465,7 +470,11 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
 
 
         #self.extra_bbox_head = build_head(extra_bbox_head)
-        self.with_grad_reversal = with_grad_reversal
+        self.extra_head_with_grad_reversal = extra_head_with_grad_reversal
+        self.extra_head_temprature_params = extra_head_temprature_params
+        self.extra_head_image_instance_weight = extra_head_image_instance_weight
+        self.extra_head_annotation_per_image = extra_head_annotation_per_image
+        self.extra_label = extra_label
 
     def init_extra_bbox_head(self, bbox_roi_extractor, extra_bbox_head):
         """Initialize ``bbox_head``"""
@@ -494,13 +503,14 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
 
         #TODO: forward train extra_head get loss and append it to roi_losses
         # assign gts and sample proposals
-        #TODO: B: it was alreday done in father's forward, consider keeping sampling_results
+        # B: it was alreday done in father's forward, re-use sampling_results
         sampling_results = self.sampling_results
+        #TODO: B: sampling results contain wrong labels (need to be replaced with extra_labels somehow)
 
         # bbox head forward and loss
         if self.with_extra_bbox:
 
-            gt_extra_labels = gt_labels # TEMP TODO: take care of labels
+            gt_extra_labels = kwargs['gt_extra_labels'] #B:take care of labels
             extra_bbox_results = self._extra_bbox_forward_train(x, sampling_results,
                                                     gt_bboxes, gt_extra_labels,
                                                     img_metas)
@@ -559,8 +569,34 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         rois = bbox2roi([res.bboxes for res in sampling_results])
         extra_bbox_results = self._extra_bbox_forward(x, rois)
 
+        extra_label = None
+
+        if(self.extra_head_annotation_per_image):
+            # replace sampling_results[0].pos_gt_labels[:] by extra label
+            for i,sr in enumerate(sampling_results):
+                #extra_label = img_metas[i][self.extra_label] #TEMP can also get it from gt_labels[i]
+                extra_label = gt_labels[i][0] #get it from gt_labels[i]
+                sr.pos_gt_labels[:]=extra_label
+
+        else:
+            raise NotImplementedError
+
+
+
         bbox_targets = self.extra_bbox_head.get_targets(sampling_results, gt_bboxes,
                                                   gt_labels, self.train_cfg)
+        if (self.extra_head_annotation_per_image):
+            #apply self.extra_head_image_instance_weight to bbox_targets[1] based on bbox_targets[0]
+            bckg_class = self.extra_bbox_head.num_classes
+            bbox_targets[1][bbox_targets[0]==bckg_class] = self.extra_head_image_instance_weight[0]#weight for background (negative)
+            bbox_targets[1][bbox_targets[0] != bckg_class] = self.extra_head_image_instance_weight[1]#weight for positive
+
+            # fix bbox_targets[0], use same label for all targets (both negative and positive)
+            bbox_targets[0][bbox_targets[0] == bckg_class] = extra_label
+
+        else:
+            raise NotImplementedError
+
 
         loss_extra_bbox = self.extra_bbox_head.loss(extra_bbox_results['cls_score'],
                                         extra_bbox_results['bbox_pred'], rois,
@@ -591,7 +627,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         # # Training progress and GRL lambda
         # p = float(batch_idx + epoch_idx * max_batches) / (n_epochs * max_batches)
         # grl_lambda = 2. / (1. + np.exp(-10 * p)) - 1
-        if(self.with_grad_reversal):
+        if(self.extra_head_with_grad_reversal):
             bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda)  # B:plug in GR
         if self.with_shared_head:
             bbox_feats = self.shared_head(bbox_feats)

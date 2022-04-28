@@ -6,7 +6,7 @@ class ExtraFormatBundle:
     Like FormatBundle but names are given in key_names
     """
 
-    def __init__(self, key_names= ['gt_domains']):
+    def __init__(self, key_names= ['gt_extra_labels']):
         self.key_names = key_names
 
     def __call__(self, results):

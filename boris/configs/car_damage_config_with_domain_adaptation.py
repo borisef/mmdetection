@@ -1,5 +1,9 @@
 num_classes = 5
-num_classes_domain_adaptation = 5 #B: TODO
+num_classes_domain_adaptation = 2 #B: TODO
+meta_keys=('filename', 'ori_filename', 'ori_shape',
+                            'img_shape', 'pad_shape', 'scale_factor', 'flip',
+                            'flip_direction', 'img_norm_cfg',
+                            'domain_id') #domain_id is new
 CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
 work_dir = '/home/borisef/projects/mmdetHack/Runs/try4'
 model = dict(
@@ -41,7 +45,12 @@ model = dict(
     roi_head=dict(
         #type='StandardRoIHead',
         type='StandardRoIHeadWithExtraBBoxHead',#B
-        with_grad_reversal = False, #TODO:B: weights of extra head with temperature
+        extra_head_with_grad_reversal = True,
+        extra_head_temprature_params = None, #TODO:B: extra head with temperature
+        extra_head_image_instance_weight = [0.1,1.0], #for domain adaptation weighting
+        extra_head_annotation_per_image = True,
+        extra_label = 'domain_id',
+
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -74,7 +83,11 @@ model = dict(
                         target_stds=[0.1, 0.1, 0.2, 0.2]),
                     reg_class_agnostic=False,
                     loss_cls=dict(
-                        type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                        type='CrossEntropyLoss',
+                        use_sigmoid=False,
+                        class_weight=None,
+                        ignore_index=None,
+                        loss_weight=1.0),
                     loss_bbox=dict(type='L1Loss', loss_weight=0.0),
                 ),
         ),
@@ -136,11 +149,13 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadExtraAnnotations', per_bbox=False, name="domain_id"),#BE
+    dict(type='LoadExtraAnnotations', annotation_per_image=True, name="domain_id"),  # load domain_id
     dict(
         type='Resize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
+        # img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
+        #            (1333, 768), (1333, 800)],
+        img_scale=[(1333, 400), (1333, 450), (1333, 550), (1333, 500),
+                   (1333, 500), (1333, 550)],
         multiscale_mode='value',
         keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -151,29 +166,29 @@ train_pipeline = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='ExtraFormatBundle', key_names=['domain_id']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels','gt_domains'])
+    dict(type='ExtraFormatBundle', key_names=['gt_extra_labels']),
+    dict(type='Collect', meta_keys=meta_keys, keys=['img', 'gt_bboxes', 'gt_labels', 'gt_extra_labels'])
 ]
 
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
+            dict(type='LoadImageFromFile'),
             dict(
-                type='Normalize',
-                mean=[103.53, 116.28, 123.675],
-                std=[1.0, 1.0, 1.0],
-                to_rgb=False),
-            dict(type='Pad', size_divisor=32),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img'])
-        ])
-]
+                type='MultiScaleFlipAug',
+                img_scale=(1333, 800),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]
 
 data = dict(
     samples_per_gpu=1,
@@ -183,78 +198,23 @@ data = dict(
         ann_file='train/COCO_mul_train_annos_1.json',
         img_prefix='train/',
         classes = CLASSES,
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(type='LoadAnnotations', with_bbox=True),
-            dict(type='LoadExtraAnnotations', per_bbox=False, name="domain_id"), # load domain_id
-            dict(
-                type='Resize',
-                img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                           (1333, 768), (1333, 800)],
-                multiscale_mode='value',
-                keep_ratio=True),
-            dict(type='RandomFlip', flip_ratio=0.5),
-            dict(
-                type='Normalize',
-                mean=[103.53, 116.28, 123.675],
-                std=[1.0, 1.0, 1.0],
-                to_rgb=False),
-            dict(type='Pad', size_divisor=32),
-            dict(type='DefaultFormatBundle'),
-            dict(type='ExtraFormatBundle', key_names=['gt_domains']),
-            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_domains'])
-        ],
+        pipeline=train_pipeline,
         data_root='/home/borisef/projects/mmdetHack/datasets/car_damage/'),
     val=dict(
         type='CocoDataset',
         ann_file='val/COCO_mul_val_annos.json',
         img_prefix='val/',
         classes = CLASSES,
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(1333, 800),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[103.53, 116.28, 123.675],
-                        std=[1.0, 1.0, 1.0],
-                        to_rgb=False),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ],
+        pipeline=test_pipeline,
         data_root='/home/borisef/datasets/car_damage/'),
     test=dict(
         type='CocoDataset',
         ann_file='val/COCO_mul_val_annos.json',
         img_prefix='val/',
         classes = CLASSES,
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(1333, 800),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[103.53, 116.28, 123.675],
-                        std=[1.0, 1.0, 1.0],
-                        to_rgb=False),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ],
+        pipeline= test_pipeline,
         data_root='/home/borisef/datasets/car_damage/'))
+
 #evaluation = dict(interval=12, metric='mAP')
 optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
