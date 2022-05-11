@@ -9,7 +9,7 @@ from .test_mixins import BBoxTestMixin, MaskTestMixin
 
 #TODO:B: move out
 from torch.autograd import Function
-
+import numpy as np
 
 # Autograd Function objects are what record operation history on tensors,
 # and define formulas for the forward and backprop.
@@ -443,6 +443,11 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                  extra_head_temprature_params = None,#weight with respect to epoch/iter
                  extra_head_image_instance_weight=[1, 1],#weight some samples differently (NOT IMPLEMENTED)
                  extra_head_annotation_per_image = True,
+                 extra_head_lambda_params=dict(max_epochs=100, #lambda will reach max at max_epoch
+                                               iters_per_epoch=1000,# for internal update of epoch
+                                               power_factor=3.0,# in (0, 10) larger factor faster the lambda grows up
+                                               default_lambda=None, #replaces all
+                                               starting_epoch = 0),#lambda is 0 till the starting_epoch
                  extra_label = None,
                  mask_roi_extractor=None,
                  mask_head=None,
@@ -475,11 +480,34 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         self.extra_head_image_instance_weight = extra_head_image_instance_weight
         self.extra_head_annotation_per_image = extra_head_annotation_per_image
         self.extra_label = extra_label
+        self.extra_head_lambda_params = extra_head_lambda_params
+        if(extra_head_lambda_params is not None):
+            self.extra_head_lambda_params.curr_epoch = 0
+            self.extra_head_lambda_params.curr_iter = 0
+            self.extra_head_lambda_params.internal_epoch_counter = True #do I count epochs by myself
+
 
     def init_extra_bbox_head(self, bbox_roi_extractor, extra_bbox_head):
         """Initialize ``bbox_head``"""
         self.extra_bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)#TODO: B: may be can use bbox_roi_extractor
         self.extra_bbox_head = build_head(extra_bbox_head)
+    def calc_grl_lambda(self):
+        grl_lambda = 1.0  # B
+        if (self.extra_head_lambda_params is not None):
+            if (self.extra_head_lambda_params['internal_epoch_counter']):
+                self.extra_head_lambda_params['curr_iter'] = self.extra_head_lambda_params['curr_iter'] + 1
+                self.extra_head_lambda_params['curr_epoch'] = self.extra_head_lambda_params['curr_iter'] / \
+                                                              self.extra_head_lambda_params['iters_per_epoch']
+            if (self.extra_head_lambda_params['default_lambda'] is not None):
+                grl_lambda = self.extra_head_lambda_params['default_lambda']
+            else:
+                if (self.extra_head_lambda_params['curr_epoch'] < self.extra_head_lambda_params['starting_epoch']):
+                    grl_lambda = 0.0
+                else:
+                    p = float(self.extra_head_lambda_params['curr_epoch']) / self.extra_head_lambda_params['max_epochs']
+                    p, power = min(p, 1.0), self.extra_head_lambda_params['power_factor']
+                    grl_lambda = 2. / (1. + np.exp(-power * p)) - 1
+        return grl_lambda
 
     def forward_train(self,
                       x,
@@ -618,21 +646,16 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         bbox_feats = self.bbox_roi_extractor(
             x[:self.bbox_roi_extractor.num_inputs], rois)
 
-
-
-        #cls_score, bbox_pred = self.bbox_head(bbox_feats)
-
         # B: da_cls_score
-        grl_lambda = 1.0  # B
-        # # Training progress and GRL lambda
-        # p = float(batch_idx + epoch_idx * max_batches) / (n_epochs * max_batches)
-        # grl_lambda = 2. / (1. + np.exp(-10 * p)) - 1
+        # Training progress and GRL lambda
+        grl_lambda = self.calc_grl_lambda()
+
         if(self.extra_head_with_grad_reversal):
             bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda)  # B:plug in GR
+
         if self.with_shared_head:
             bbox_feats = self.shared_head(bbox_feats)
         extra_cls_score, extra_bbox_pred = self.extra_bbox_head(bbox_feats)  # B
-
 
         bbox_results = dict(
             cls_score=extra_cls_score, bbox_pred=extra_bbox_pred, bbox_feats=bbox_feats)

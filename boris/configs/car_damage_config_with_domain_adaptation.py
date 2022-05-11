@@ -49,6 +49,7 @@ model = dict(
         extra_head_temprature_params = None, #TODO:B: extra head with temperature
         extra_head_image_instance_weight = [0.1,1.0], #for domain adaptation weighting
         extra_head_annotation_per_image = True,
+        extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 1000, power_factor = 3.0, default_lambda = None, starting_epoch = 0),
         extra_label = 'domain_id',
 
         bbox_roi_extractor=dict(
@@ -252,13 +253,20 @@ fmHook = dict(
     imName = None,
     type = 'FeatureMapHook'
 )
-custom_hooks = [expHook, fmHook]
+
+epoch_to_model_hook = dict(
+    type = "SetEpochDataInModelHook",
+    submodule = "roi_head.extra_head_lambda_params",
+    jump = 1
+)
+custom_hooks = [expHook, fmHook, epoch_to_model_hook]
 
 
 custom_imports=dict(
     imports=['boris.kitti_Dataset',
              'boris.experimental_hook',
              'boris.get_feature_maps_hook',
+             'boris.set_epoch_data_in_model_hook',
              'boris.user_loading',
              'boris.user_formating'])
 
