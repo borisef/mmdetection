@@ -154,6 +154,14 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
         return bbox_results
 
+    #B
+    def probe_keep_debug_results_bbox_forward_train(self, bbox_results, bbox_targets):
+        if (hasattr(self, 'keep_debug_results')):
+            if (self.keep_debug_results):
+                self.debug_results = {}
+                self.debug_results['features'] = bbox_results['bbox_feats'].clone().cpu().detach().numpy()
+                self.debug_results['labels'] = bbox_targets[0].clone().cpu().detach().numpy()
+
     def _bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
                             img_metas):
         """Run forward function and calculate loss for box head in training."""
@@ -166,12 +174,8 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
                                         bbox_results['bbox_pred'], rois,
                                         *bbox_targets)
-        #B
-        if(hasattr(self, 'keep_debug_results')):
-            if(self.keep_debug_results):
-                self.debug_results ={}
-                self.debug_results['features'] = bbox_results['bbox_feats'].clone().cpu().detach().numpy()
-                self.debug_results['labels'] = bbox_targets[0].clone().cpu().detach().numpy()
+        #B: TODO: make one line
+        self.probe_keep_debug_results_bbox_forward_train(bbox_results, bbox_targets)
 
 
         bbox_results.update(loss_bbox=loss_bbox)
@@ -545,7 +549,9 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
             #change names in extra_bbox_results['loss_extra_bbox'] to have all losses
             extra_bbox_results['loss_extra_bbox']['loss_extra_cls'] = extra_bbox_results['loss_extra_bbox']['loss_cls']
             extra_bbox_results['loss_extra_bbox']['loss_extra_bbox'] = extra_bbox_results['loss_extra_bbox']['loss_bbox']
-            roi_losses.update(extra_bbox_results['loss_extra_bbox'])
+            #roi_losses.update(extra_bbox_results['loss_extra_bbox'])
+            roi_losses['loss_extra_bbox']=extra_bbox_results['loss_extra_bbox']['loss_extra_bbox']
+            roi_losses['loss_extra_cls'] = extra_bbox_results['loss_extra_bbox']['loss_extra_cls']
         return roi_losses
 
     # def _bbox_forward(self, x, rois):
@@ -589,6 +595,13 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
     #     bbox_results.update(loss_bbox=loss_bbox)
     #     bbox_results.update(loss_bbox_extra=extra_loss_bbox)
     #     return bbox_results
+    def probe_keep_debug_results_extra_bbox_forward_train(self, extra_bbox_results, bbox_targets):
+        if (hasattr(self, 'keep_debug_results')):
+            if (self.keep_debug_results):
+                if(not hasattr(self,'debug_results')):
+                    self.debug_results = {}
+                #self.debug_results['extra_features'] = extra_bbox_results['bbox_feats'].clone().cpu().detach().numpy()
+                self.debug_results['extra_labels'] = bbox_targets[0].clone().cpu().detach().numpy()
 
     def _extra_bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
                                   img_metas):
@@ -630,12 +643,8 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                                         extra_bbox_results['bbox_pred'], rois,
                                         *bbox_targets)
         # B: debug vizualization
-        # if (hasattr(self, 'keep_debug_results')):
-        #     if (self.keep_debug_results):
-        #         if(not hasattr(self,'debug_results')):
-        #             self.debug_results = {}
-        #         self.debug_results['extra_bbox_features'] = extra_bbox_results['bbox_feats'].clone().cpu().detach().numpy()
-        #         self.debug_results['extra_labels'] = bbox_targets[0].clone().cpu().detach().numpy()
+        # B: TODO: make one line
+        self.probe_keep_debug_results_extra_bbox_forward_train(extra_bbox_results, bbox_targets)
 
         extra_bbox_results.update(loss_extra_bbox=loss_extra_bbox)
         return extra_bbox_results

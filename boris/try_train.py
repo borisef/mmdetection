@@ -15,11 +15,21 @@ from mmdet.apis.train import  set_random_seed
 
 from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 
+import train_wrap_utils_home
+
 #cfg_file = 'configs/kiti_config.py'
 #cfg_file = 'configs/car_damage_config.py'
 # cfg_file = 'configs/traffic_config.py'
 #cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
-cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
+#cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
+#cfg_file = 'configs/traffic_config_with_domain_adaptation.py'
+
+cfg_file = 'configs/traffic_config_with_da_Gray_Gray.py'
+#cfg_file = 'configs/traffic_config_without_da_RGB_gray.py'
+#cfg_file = 'configs/traffic_config_without_da_mix_gray.py'
+
+#cfg_file = 'configs/traffic_config_without_da_RGB_RGB.py'
+#cfg_file = 'configs/traffic_config_without_da_gray_RGB.py'
 
 cp = ArgConfigParams() # create inctance of class
 cp.arguments_cfg() #init valid arguments in command line
@@ -48,6 +58,10 @@ train_detector(model, datasets, cfg, distributed=False, validate=True)
 #try on one image:
 
 imgs = cfg.example_images
+
+imgs = train_wrap_utils_home.redefine_images(imgs)
+
+
 model.cfg = cfg
 
 for ima in imgs:
