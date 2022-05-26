@@ -24,12 +24,8 @@ import train_wrap_utils_home
 #cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
 #cfg_file = 'configs/traffic_config_with_domain_adaptation.py'
 
-cfg_file = 'configs/traffic_config_with_da_Gray_Gray.py'
-#cfg_file = 'configs/traffic_config_without_da_RGB_gray.py'
-#cfg_file = 'configs/traffic_config_without_da_mix_gray.py'
-
-#cfg_file = 'configs/traffic_config_without_da_RGB_RGB.py'
-#cfg_file = 'configs/traffic_config_without_da_gray_RGB.py'
+#cfg_file = 'configs/traffic_config_with_da_Mix_Gray3.py'
+cfg_file = 'configs/traffic_config_with_da_Mix3domains.py'
 
 cp = ArgConfigParams() # create inctance of class
 cp.arguments_cfg() #init valid arguments in command line

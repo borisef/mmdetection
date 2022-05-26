@@ -85,9 +85,13 @@ class VizDebugFeaturesHook(Hook):
 
 
     def after_train_iter(self, runner):
+        #runner.outputs['log_vars']['aaa'] = 42 #TEMP
+
         if (self.active == False):
             return
-        #TODO: coppy arrays
+        if (self.model_type == 'StandardRoIHeadWithExtraBBoxHead'):
+            temp = runner.model.module.roi_head.last_grl_lambda
+            runner.log_buffer.update({'da/lambda': temp})
         if (self.model_type == 'StandardRoIHead'
         or self.model_type == 'StandardRoIHeadWithExtraBBoxHead'):
             debug_results = runner.model.module.roi_head.debug_results

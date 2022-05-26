@@ -658,6 +658,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         # B: da_cls_score
         # Training progress and GRL lambda
         grl_lambda = self.calc_grl_lambda()
+        self.last_grl_lambda = grl_lambda
 
         if(self.extra_head_with_grad_reversal):
             bbox_feats = GradientReversalFn.apply(bbox_feats, grl_lambda)  # B:plug in GR

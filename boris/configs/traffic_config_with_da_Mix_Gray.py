@@ -293,5 +293,5 @@ custom_imports=dict(
              'boris.user_loading',
              'boris.user_formating'])
 
-example_images = '/home/borisef/datasets/traffic/set_50_domain_Gray2/'
+example_images = '/home/borisef/datasets/traffic/set_50_domain_Gray/'
 

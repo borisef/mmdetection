@@ -8,10 +8,10 @@ num_classes = 12
 CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft',
            'trafficLight-Red','trafficLight-RedLeft','trafficLight-Yellow','trafficLight-YellowLeft','truck']
 
-num_domains = 2 #B: TODO
-DOMAINS = ['rgb', 'gray']
+num_domains = 3 #B: TODO
+DOMAINS = ['grayblur', 'negative',  'rgb']
 
-work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_gray2_gray2_v03a_no_da'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3domains_v03_YES_da'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -50,12 +50,13 @@ model = dict(
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
         #type='StandardRoIHead',
-        type='StandardRoIHeadWithExtraBBoxHead',#B
-        extra_head_with_grad_reversal = True,
-        #extra_head_temprature_params = None, #TODO:B: extra head with temperature
+        type='StandardRoIHeadWithExtraBBoxHead',#Like StandardRoIHead + extra bbox head
+
+        #extra head params TODO: make one dictionary
+        extra_head_with_grad_reversal = False, #
         extra_head_image_instance_weight = [0.1,1.0], #for domain adaptation weighting
-        extra_head_annotation_per_image = True,
-        extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 50, power_factor = 3.0, default_lambda = None, starting_epoch = 0),
+        extra_head_annotation_per_image = True, #is domain annotation per image (or per target)
+        extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 20, power_factor = 3.0, default_lambda = None, starting_epoch = 0),
         extra_label = 'domain_id',
 
         bbox_roi_extractor=dict(
@@ -94,7 +95,7 @@ model = dict(
                         use_sigmoid=False,
                         class_weight=None,
                         ignore_index=None,
-                        loss_weight=0.0),
+                        loss_weight=1.0), # D.A.
                     loss_bbox=dict(type='L1Loss', loss_weight=0.0),
                 ),
         ),
@@ -159,8 +160,6 @@ train_pipeline = [
     dict(type='LoadExtraAnnotations', annotation_per_image=True, name="domain_id"),  # load domain_id
     dict(
         type='Resize',
-        # img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-        #            (1333, 768), (1333, 800)],
         img_scale=[(1333, 400), (1333, 450), (1333, 550), (1333, 500),
                    (1333, 500), (1333, 550)],
         multiscale_mode='value',
@@ -203,22 +202,22 @@ data = dict(
     workers_per_gpu=0,
     train=dict(
         type='CocoDataset',
-        ann_file='set_500_mixed_domains/data_da.json',
-        img_prefix='set_500_mixed_domains/',
+        ann_file='set_100_3domains/data_da.json',
+        img_prefix='set_100_3domains/',
         classes = CLASSES,
         pipeline=train_pipeline,
         data_root='/home/borisef/datasets/traffic/'),
     val=dict(
         type='CocoDataset',
-        ann_file='set_50_domain_Gray/data_da.json',
+        ann_file='set_50_domain_grayblur/data_da.json',
         img_prefix='set_50_domain_Gray/',
         classes = CLASSES,
         pipeline=test_pipeline,
         data_root='/home/borisef/datasets/traffic/'),
     test=dict(
         type='CocoDataset',
-        ann_file='set_50_domain_Gray/data_da.json',
-        img_prefix='set_50_domain_Gray/',
+        ann_file='set_50_domain_grayblur/data_da.json',
+        img_prefix='set_50_domain_grayblur/',
         classes=CLASSES,
         pipeline=test_pipeline,
         data_root='/home/borisef/datasets/traffic/'))
@@ -281,7 +280,7 @@ epoch_to_model_hook = dict(
     submodule = "roi_head.extra_head_lambda_params",
     jump = 1
 )
-custom_hooks = [ ]#epoch_to_model_hook,
+custom_hooks = [ viz_debugHook]#epoch_to_model_hook,
 
 
 custom_imports=dict(
@@ -293,5 +292,5 @@ custom_imports=dict(
              'boris.user_loading',
              'boris.user_formating'])
 
-example_images = '/home/borisef/datasets/traffic/set_50_domain_Gray2/'
+example_images = '/home/borisef/datasets/traffic/set_50_domain_grayblur/'
 
