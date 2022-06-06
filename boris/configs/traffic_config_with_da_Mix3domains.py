@@ -11,7 +11,7 @@ CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLi
 num_domains = 3 #B: TODO
 DOMAINS = ['grayblur', 'negative',  'rgb']
 
-work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3domains_v03_YES_da'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3domains_v06'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -52,12 +52,21 @@ model = dict(
         #type='StandardRoIHead',
         type='StandardRoIHeadWithExtraBBoxHead',#Like StandardRoIHead + extra bbox head
 
-        #extra head params TODO: make one dictionary
-        extra_head_with_grad_reversal = False, #
+
+        extra_head_with_grad_reversal = True, #
         extra_head_image_instance_weight = [0.1,1.0], #for domain adaptation weighting
         extra_head_annotation_per_image = True, #is domain annotation per image (or per target)
         extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 20, power_factor = 3.0, default_lambda = None, starting_epoch = 0),
         extra_label = 'domain_id',
+
+        #extra head params TODO: make one dictionary
+        # extra_head_params = dict(
+        #     extra_label = 'domain_id',
+        #     extra_head_with_grad_reversal = True,
+        #     extra_head_image_instance_weight = [0.1, 1], #for domain adaptation weighting
+        #     extra_head_annotation_per_image = True, #is domain annotation per image (or per target)
+        #     extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 20, power_factor = 3.0, default_lambda = None, starting_epoch = 0)
+        # ),
 
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
@@ -250,14 +259,23 @@ workflow = [('train', 1)]
 seed = 0
 gpu_ids = range(0, 1)
 
-viz_debugHook = dict(
-    type='VizDebugFeaturesHook',
-    model_type='StandardRoIHeadWithExtraBBoxHead',  # 'StandardRoIHead'
+viz_debugHookRoIHead = dict(
+    type='VizDebugFeaturesHookStandardRoIHead',
+    num_classes=num_classes,
+    class_names=CLASSES,
+    log_folder=work_dir + '/class_features_roihead',
+    max_per_class=150,
+    #epochs = [0,10, 25,50,75,200,295] #
+)
+
+viz_debugHookRoIHeadExtra = dict(
+    type='VizDebugFeaturesHookStandardRoIHeadWithExtraBBoxHead',
     num_classes=[num_classes, num_domains],
     class_names=[CLASSES, DOMAINS],
-    log_folder=[work_dir + '/class_features_viz', work_dir + '/domain_features_viz'],
-    max_per_class=100,
-    epochs = [0,1,2,3,4] #
+    log_folder=work_dir + '/class_features_roihead_with_extra',
+    max_per_class=150,
+    log_lambda_to_runner = True,
+    epochs = [0,25,50,75,200,295] #
 )
 
 expHook = dict(
@@ -280,12 +298,13 @@ epoch_to_model_hook = dict(
     submodule = "roi_head.extra_head_lambda_params",
     jump = 1
 )
-custom_hooks = [ viz_debugHook]#epoch_to_model_hook,
+custom_hooks = [ viz_debugHookRoIHead, viz_debugHookRoIHeadExtra]#epoch_to_model_hook,
 
 
 custom_imports=dict(
     imports=['boris.kitti_Dataset',
              'boris.viz_debug_features_hook',
+             'boris.standard_roi_head_with_extra',
              'boris.experimental_hook',
              'boris.get_feature_maps_hook',
              'boris.set_epoch_data_in_model_hook',
