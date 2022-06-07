@@ -52,21 +52,14 @@ model = dict(
         #type='StandardRoIHead',
         type='StandardRoIHeadWithExtraBBoxHead',#Like StandardRoIHead + extra bbox head
 
-
-        extra_head_with_grad_reversal = True, #
-        extra_head_image_instance_weight = [0.1,1.0], #for domain adaptation weighting
-        extra_head_annotation_per_image = True, #is domain annotation per image (or per target)
-        extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 20, power_factor = 3.0, default_lambda = None, starting_epoch = 0),
-        extra_label = 'domain_id',
-
-        #extra head params TODO: make one dictionary
-        # extra_head_params = dict(
-        #     extra_label = 'domain_id',
-        #     extra_head_with_grad_reversal = True,
-        #     extra_head_image_instance_weight = [0.1, 1], #for domain adaptation weighting
-        #     extra_head_annotation_per_image = True, #is domain annotation per image (or per target)
-        #     extra_head_lambda_params = dict(max_epochs = 100, iters_per_epoch = 20, power_factor = 3.0, default_lambda = None, starting_epoch = 0)
-        # ),
+        #extra head params (one dictionary)
+        extra_head_params = dict(
+            extra_label = 'domain_id',
+            with_grad_reversal = True,
+            image_instance_weight = [0.2, 1], #for domain adaptation weighting
+            annotation_per_image = True, #is domain annotation per image (or per target)
+            lambda_params = dict(max_epochs = 200, iters_per_epoch = 20, power_factor = 3.5, default_lambda = None, starting_epoch = 0)
+        ),
 
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
@@ -295,7 +288,7 @@ fmHook = dict(
 
 epoch_to_model_hook = dict(
     type = "SetEpochDataInModelHook",
-    submodule = "roi_head.extra_head_lambda_params",
+    submodule = "roi_head.lambda_params",
     jump = 1
 )
 custom_hooks = [ viz_debugHookRoIHead, viz_debugHookRoIHeadExtra]#epoch_to_model_hook,
