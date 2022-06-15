@@ -457,7 +457,7 @@ class CocoDataset(CustomDataset):
                 cocoDt = cocoGt.loadRes(predictions)
             except IndexError:
                 print_log(
-                    'The testing results of the whole dataset is empty.',
+                    'The testing results of the whole dataset is empty 1.',
                     logger=logger,
                     level=logging.ERROR)
                 break
@@ -571,3 +571,6 @@ class CocoDataset(CustomDataset):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
+
+
+

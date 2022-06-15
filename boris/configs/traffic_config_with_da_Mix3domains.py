@@ -11,7 +11,7 @@ CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLi
 num_domains = 3 #B: TODO
 DOMAINS = ['grayblur', 'negative',  'rgb']
 
-work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3domains_v06'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3domains_v07'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -86,7 +86,7 @@ model = dict(
                     in_channels=256,
                     fc_out_channels=1024,
                     roi_feat_size=7,
-                    num_classes=num_domains,
+                    num_classes=num_domains-1,
                     bbox_coder=dict(
                         type='DeltaXYWHBBoxCoder',
                         target_means=[0.0, 0.0, 0.0, 0.0],
@@ -203,7 +203,7 @@ data = dict(
     samples_per_gpu=1,
     workers_per_gpu=0,
     train=dict(
-        type='CocoDataset',
+        type='MyCocoDataset',
         ann_file='set_100_3domains/data_da.json',
         img_prefix='set_100_3domains/',
         classes = CLASSES,
@@ -245,7 +245,7 @@ custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from =  '../checkpoints/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
-resume_from = None
+resume_from = work_dir + 'latest.pth'
 #workflow = [('train', 1), ('val', 1)] #not working
 workflow = [('train', 1)]
 

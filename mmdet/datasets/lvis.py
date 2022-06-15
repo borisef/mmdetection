@@ -390,7 +390,7 @@ class LVISV05Dataset(CocoDataset):
                 lvis_dt = LVISResults(lvis_gt, result_files[metric])
             except IndexError:
                 print_log(
-                    'The testing results of the whole dataset is empty.',
+                    'The testing results of the whole dataset is empty 0.',
                     logger=logger,
                     level=logging.ERROR)
                 break

@@ -39,10 +39,15 @@ class LoadExtraAnnotations:
             num_annotations = len(results['ann_info'])
             results['gt_extra_labels'] = np.array([extra_label]*num_annotations,
                                                   dtype=results['gt_labels'].dtype)
-            results[self.name] = extra_label
+            results[self.name] = extra_label#TODO: remove this or gt_extra_label_per_image
+            results['gt_extra_label_per_image'] = extra_label
         else: # TODO: implement the case with domain is one per bbox
             #see _parse_ann_info function in coco
-            raise NotImplementedError
+            num_annotations = len(results['ann_info'])
+            results['gt_extra_labels'] = np.array(results['ann_info']['extra_labels'], dtype=results['gt_labels'].dtype)
+            results['gt_extra_label_per_image'] = results['img_info'][self.name]
+            results[self.name] = results['img_info'][self.name]
+            #raise NotImplementedError
 
         return results
 

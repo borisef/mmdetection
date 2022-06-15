@@ -1,4 +1,5 @@
 import copy
+import os.path
 import os.path as osp
 
 import mmcv
@@ -19,14 +20,16 @@ import train_wrap_utils_home
 
 #cfg_file = 'configs/kiti_config.py'
 #cfg_file = 'configs/car_damage_config.py'
-# cfg_file = 'configs/traffic_config.py'
+#cfg_file = 'configs/traffic_config.py'
 #cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
 #cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
 #cfg_file = 'configs/traffic_config_with_domain_adaptation.py'
 
 #cfg_file = 'configs/traffic_config_with_da_Mix_Gray3.py'
-cfg_file = 'configs/traffic_config_with_da_Mix3domains.py'
-
+#cfg_file = 'configs/traffic_config_with_da_Mix3domains.py'
+#cfg_file = "configs/traffic_config_with_da_Mix3instance_domains_resnet18.py"
+#cfg_file = 'configs/traffic_config_with_da_Mix3image_domains_resnet18.py'
+cfg_file = "configs/traffic_config_with_da_Mix3instance_domains_resnet50.py" #TODO: continue running
 cp = ArgConfigParams() # create inctance of class
 cp.arguments_cfg() #init valid arguments in command line
 args = cp.parser.parse_args()
@@ -35,6 +38,8 @@ if(args.config_file is not None):
 
 
 cfg = Config.fromfile(cfg_file)
+if(cfg.resume_from is None or (not os.path.exists(cfg.resume_from))):
+    cfg.resume_from = None
 cfg = update_config_from_args(cfg, cp) # change parameters based on command line
 
 # Build dataset

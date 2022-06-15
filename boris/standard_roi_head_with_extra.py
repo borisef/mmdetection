@@ -16,6 +16,9 @@ def redefine_dict_params(new_dict, orig_dict):
             raise NameError(key + " wrong key")
         if (new_dict[key] is None):
             continue
+        if (orig_dict[key] is None):
+            orig_dict[key] = new_dict[key]
+            continue
         if (type(new_dict[key]) != type(orig_dict[key])):
             if(('dict' in str(type(orig_dict[key])).lower()) and
                     ('dict' in str(type(new_dict[key])).lower())):
@@ -197,28 +200,41 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         if(self.extra_head_params['annotation_per_image']):
             # replace sampling_results[0].pos_gt_labels[:] by extra label
             for i,sr in enumerate(sampling_results):
-                #extra_label = img_metas[i][self.extra_label] #TEMP can also get it from gt_labels[i]
-                extra_label = gt_labels[i][0] #get it from gt_labels[i]
+                extra_label = gt_labels[i][0] #get it from any of gt_labels[i]
                 sr.pos_gt_labels[:]=extra_label
 
         else:
-            raise NotImplementedError
+            e_l_str = self.extra_head_params['extra_label']
+            for i, sr in enumerate(sampling_results):
+                label_per_target = gt_labels[i]
+                mapped_targets = sr.pos_assigned_gt_inds
+                extra_label_for_background = img_metas[i][e_l_str]
+                for j,t in enumerate(mapped_targets):
+                    sr.pos_gt_labels[j] = label_per_target[t]
+
+
+
 
 
 
         bbox_targets = self.extra_bbox_head.get_targets(sampling_results, gt_bboxes,
                                                   gt_labels, self.train_cfg)
-        if (self.extra_head_params['annotation_per_image']):
-            #apply image_instance_weight to bbox_targets[1] based on bbox_targets[0]
-            bckg_class = self.extra_bbox_head.num_classes
-            bbox_targets[1][bbox_targets[0]==bckg_class] = self.extra_head_params['image_instance_weight'][0]#weight for background (negative)
-            bbox_targets[1][bbox_targets[0] != bckg_class] = self.extra_head_params['image_instance_weight'][1]#weight for positive
 
-            # fix bbox_targets[0], use same label for all targets (both negative and positive)
-            bbox_targets[0][bbox_targets[0] == bckg_class] = extra_label
-
-        else:
-            raise NotImplementedError
+        # make sure extra_label_for_background is applied for each negative sample
+        # make sure positive and negative samples are correctly weighted
+        e_l_str = self.extra_head_params['extra_label']
+        num_bef = 0  # counter because of batch
+        bbox_targets[1][:] = self.extra_head_params['image_instance_weight'][1]  # init all with weight for positive
+        for i, sr in enumerate(sampling_results):
+            image_extra_label = img_metas[i][e_l_str]  # get extra_label per image
+            num_samples = sr.bboxes.shape[0]
+            num_neg_samples = sr.neg_inds.shape[0]
+            num_pos_samples = sr.pos_inds.shape[0]
+            temp_neg_indexes = np.arange(num_pos_samples, num_samples)
+            temp_neg_indexes = temp_neg_indexes + num_bef
+            bbox_targets[0][temp_neg_indexes] = image_extra_label  # set extra_label
+            bbox_targets[1][temp_neg_indexes] = self.extra_head_params['image_instance_weight'][0]  # set neg weight
+            num_bef = num_bef + num_samples  # accumulate batch size
 
 
         loss_extra_bbox = self.extra_bbox_head.loss(extra_bbox_results['cls_score'],
