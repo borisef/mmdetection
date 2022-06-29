@@ -302,7 +302,8 @@ custom_imports=dict(
              'boris.get_feature_maps_hook',
              'boris.set_epoch_data_in_model_hook',
              'boris.user_loading',
-             'boris.user_formating'])
+             'boris.user_formating',
+             'boris.my_coco'])
 
 example_images = '/home/borisef/datasets/traffic/set_50_domain_grayblur/'
 

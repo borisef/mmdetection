@@ -1,17 +1,94 @@
+work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_try_v06'
 
 meta_keys=('filename', 'ori_filename', 'ori_shape',
                             'img_shape', 'pad_shape', 'scale_factor', 'flip',
-                            'flip_direction', 'img_norm_cfg',
-                            'domain_id') #domain_id is new
+                            'flip_direction', 'img_norm_cfg'
+                            ) #domain_id is new
 
 num_classes = 12
-CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft',
-           'trafficLight-Red','trafficLight-RedLeft','trafficLight-Yellow','trafficLight-YellowLeft','truck']
+CLASSES = ['obstacles', 'biker', 'car', 'pedestrian',
+           'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft',
+           'trafficLight-Red','trafficLight-RedLeft','trafficLight-Yellow','trafficLight-YellowLeft',
+           'truck']
+w = 0.9
+h = (1.0-w)/12.0
 
-num_domains = 3 #B: TODO
-DOMAINS = ['grayblur', 'negative',  'rgb']
 
-work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3instance_domains_v08resnet500_nono_da'
+
+smoothing_T = [
+[w,h,h,h,h,h,h,h,h,h,h,h,h],
+[h,w,h,h,h,h,h,h,h,h,h,h,h],
+[h,h,w,h,h,h,h,h,h,h,h,h,h],
+[h,h,h,w,h,h,h,h,h,h,h,h,h],
+[h,h,h,h,w,h,h,h,h,h,h,h,h],
+[h,h,h,h,h,w,h,h,h,h,h,h,h],
+[h,h,h,h,h,h,w,h,h,h,h,h,h],
+[h,h,h,h,h,h,h,w,h,h,h,h,h],
+[h,h,h,h,h,h,h,h,w,h,h,h,h],
+[h,h,h,h,h,h,h,h,h,w,h,h,h],
+[h,h,h,h,h,h,h,h,h,h,w,h,h],
+[h,h,h,h,h,h,h,h,h,h,h,w,h],
+[h,h,h,h,h,h,h,h,h,h,h,h,w]
+]
+
+w = 1
+h = 0.075
+
+smoothing_T1 = [
+[w,2*h,2*h,2*h,0,0,0,0,0,0,0,2*h,0],
+[2*h,w,2*h,5*h,0,0,0,0,0,0,0,0,0],
+[2*h,2*h,w,2*h,0,0,0,0,0,0,0,3*h,0],
+[2*h,5*h,2*h,w,0,0,0,0,0,0,0,3*h,0],
+[0,0,0,0,w,5*h,5*h,5*h,5*h,5*h,5*h,0,0],
+[0,0,0,0,5*h,w,5*h,5*h,5*h,5*h,5*h,0,0],
+[0,0,0,0,5*h,5*h,w,5*h,5*h,5*h,5*h,0,0],
+[0,0,0,0,5*h,5*h,5*h,w,5*h,5*h,5*h,0,0],
+[0,0,0,0,5*h,5*h,5*h,5*h,w,5*h,5*h,0,0],
+[0,0,0,0,5*h,5*h,5*h,5*h,5*h,w,5*h,0,0],
+[0,0,0,0,5*h,5*h,5*h,5*h,5*h,5*h,w,0,0],
+[2*h,0,5*h,0,0,0,0,0,0,0,0,w,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,w]
+]
+
+T1 = [[0.625     , 0.09375   , 0.09375   , 0.09375   , 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.09375   , 0.        ],
+       [0.08955224, 0.59701493, 0.08955224, 0.2238806 , 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.        , 0.        ],
+       [0.08955224, 0.08955224, 0.59701493, 0.08955224, 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.13432836, 0.        ],
+       [0.07894737, 0.19736842, 0.07894737, 0.52631579, 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.11842105, 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.30769231,
+        0.11538462, 0.11538462, 0.11538462, 0.11538462, 0.11538462,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.30769231, 0.11538462, 0.11538462, 0.11538462, 0.11538462,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.11538462, 0.30769231, 0.11538462, 0.11538462, 0.11538462,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.11538462, 0.11538462, 0.30769231, 0.11538462, 0.11538462,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.11538462, 0.11538462, 0.11538462, 0.30769231, 0.11538462,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.11538462, 0.11538462, 0.11538462, 0.11538462, 0.30769231,
+        0.11538462, 0.        , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.11538462,
+        0.11538462, 0.11538462, 0.11538462, 0.11538462, 0.11538462,
+        0.30769231, 0.        , 0.        ],
+       [0.09836066, 0.        , 0.24590164, 0.        , 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.6557377 , 0.        ],
+       [0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.        , 0.        , 0.        , 0.        ,
+        0.        , 0.        , 1.        ]]
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -46,20 +123,11 @@ model = dict(
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, class_weight = [1,0.01]),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        #type='StandardRoIHead',
-        type='StandardRoIHeadWithExtraBBoxHead',#Like StandardRoIHead + extra bbox head
+        type='StandardRoIHead',
 
-        #extra head params (one dictionary)
-        extra_head_params = dict(
-            extra_label = 'domain_id',
-            with_grad_reversal = False,
-            image_instance_weight = [0.2, 1], #for domain adaptation weighting
-            annotation_per_image = False, #is domain annotation per image (or per target)
-            lambda_params = dict(max_epochs = 100, iters_per_epoch = 200, power_factor = 3.0, default_lambda = None, starting_epoch = 0)
-        ),
 
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
@@ -79,27 +147,15 @@ model = dict(
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+            # loss_cls=dict(
+            #      type='SmoothedLoss',
+            #      smoothing = 0.1,
+            #      smoothing_transform = T1,
+            #      use_sigmoid=False,
+            #      loss_func = 'CrossEntropyLoss', #'CrossEntropyLoss', 'BCEWithLogitsLoss', 'kl_div', 'MultiLabelSoftMarginLoss'
+            #      loss_weight=1.5),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-        ),
-        extra_bbox_head=dict(
-                    type='Shared2FCBBoxHead',
-                    in_channels=256,
-                    fc_out_channels=1024,
-                    roi_feat_size=7,
-                    num_classes=num_domains,
-                    bbox_coder=dict(
-                        type='DeltaXYWHBBoxCoder',
-                        target_means=[0.0, 0.0, 0.0, 0.0],
-                        target_stds=[0.1, 0.1, 0.2, 0.2]),
-                    reg_class_agnostic=False,
-                    loss_cls=dict(
-                        type='CrossEntropyLoss',
-                        use_sigmoid=False,
-                        class_weight=None,
-                        ignore_index=None,
-                        loss_weight=1.0), # D.A.
-                    loss_bbox=dict(type='L1Loss', loss_weight=0.0),
-                ),
+        )
         ),
 
     train_cfg=dict(
@@ -159,7 +215,6 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadExtraAnnotations', annotation_per_image=False, name="domain_id"),  # load domain_id
     dict(
         type='Resize',
         img_scale=[(1333, 400), (1333, 450), (1333, 550), (1333, 500),
@@ -174,8 +229,7 @@ train_pipeline = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='ExtraFormatBundle', key_names=['gt_extra_labels']),
-    dict(type='Collect', meta_keys=meta_keys, keys=['img', 'gt_bboxes', 'gt_labels', 'gt_extra_labels'])
+    dict(type='Collect', meta_keys=meta_keys, keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 
 test_pipeline = [
@@ -204,23 +258,22 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='MyCocoDataset',
-        ann_file='set_500_domain_mixed_3instances/data_da.json',
-        img_prefix='set_500_domain_mixed_3instances/',
+        ann_file='set_300/data.json',
+        img_prefix='set_300/',
         classes = CLASSES,
         pipeline=train_pipeline,
-        data_root='/home/borisef/datasets/traffic/',
-        extra_label = 'domain_id'),
+        data_root='/home/borisef/datasets/traffic/'),
     val=dict(
         type='CocoDataset',
-        ann_file='set_50_domain_grayblur/data_da.json',
-        img_prefix='set_50_domain_grayblur/',
+        ann_file='set_100/data.json',
+        img_prefix='set_100/',
         classes = CLASSES,
         pipeline=test_pipeline,
         data_root='/home/borisef/datasets/traffic/'),
     test=dict(
         type='CocoDataset',
-        ann_file='set_50_domain_grayblur/data_da.json',
-        img_prefix='set_50_domain_grayblur/',
+        ann_file='set_100/data.json',
+        img_prefix='set_100/',
         classes=CLASSES,
         pipeline=test_pipeline,
         data_root='/home/borisef/datasets/traffic/'))
@@ -234,8 +287,8 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=0.001,
     step=[1,100])
-runner = dict(type='EpochBasedRunner', max_epochs=500)
-checkpoint_config = dict(interval=10)
+runner = dict(type='EpochBasedRunner', max_epochs=300)
+checkpoint_config = dict(interval=5)
 log_config = dict(
     interval=10,
     hooks=[
@@ -262,16 +315,6 @@ viz_debugHookRoIHead = dict(
     #epochs = [0,10, 25,50,75,200,295] #
 )
 
-viz_debugHookRoIHeadExtra = dict(
-    type='VizDebugFeaturesHookStandardRoIHeadWithExtraBBoxHead',
-    num_classes=[num_classes, num_domains],
-    class_names=[CLASSES, DOMAINS],
-    log_folder=work_dir + '/class_features_roihead_with_extra',
-    max_per_class=150,
-    log_lambda_to_runner = True,
-    epochs = [0,25,50,75,200,295] #
-)
-
 
 
 fmHook = dict(
@@ -287,7 +330,7 @@ epoch_to_model_hook = dict(
     submodule = "roi_head.lambda_params",
     jump = 1
 )
-custom_hooks = [ viz_debugHookRoIHead, viz_debugHookRoIHeadExtra]#epoch_to_model_hook,
+custom_hooks = [ ]#epoch_to_model_hook,
 
 
 custom_imports=dict(
@@ -299,7 +342,8 @@ custom_imports=dict(
              'boris.set_epoch_data_in_model_hook',
              'boris.user_loading',
              'boris.my_coco',
+             'boris.smoothed_loss',
              'boris.user_formating'])
 
-example_images = '/home/borisef/datasets/traffic/set_50_domain_grayblur/'
+example_images = '/home/borisef/datasets/traffic/set_100/'
 

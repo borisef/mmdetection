@@ -8,10 +8,10 @@ num_classes = 12
 CLASSES = ['obstacles', 'biker', 'car', 'pedestrian', 'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft',
            'trafficLight-Red','trafficLight-RedLeft','trafficLight-Yellow','trafficLight-YellowLeft','truck']
 
-num_domains = 3 #B: TODO
+num_domains = 3
 DOMAINS = ['grayblur', 'negative',  'rgb']
 
-work_dir = '/home/borisef/projects/mmdetHack/Runs/traffic_withda_mix3instance_domains_v08resnet500_nono_da'
+work_dir = '/home/borisef/projects/mmdetHack/Runs/try1_0_8_8_start_2'
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -58,7 +58,8 @@ model = dict(
             with_grad_reversal = False,
             image_instance_weight = [0.2, 1], #for domain adaptation weighting
             annotation_per_image = False, #is domain annotation per image (or per target)
-            lambda_params = dict(max_epochs = 100, iters_per_epoch = 200, power_factor = 3.0, default_lambda = None, starting_epoch = 0)
+            #lambda_params = dict(max_epochs = 100, iters_per_epoch = 200, power_factor = 3.0, default_lambda = None, starting_epoch = 0)
+            lambda_params = dict(start_end_max_epoch = [0,8,8], iters_per_epoch = 50, power_factor = 3.0, default_lambda = None, init_epoch = 2)
         ),
 
         bbox_roi_extractor=dict(
@@ -201,7 +202,7 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=2,
+    workers_per_gpu=0,
     train=dict(
         type='MyCocoDataset',
         ann_file='set_500_domain_mixed_3instances/data_da.json',
@@ -282,11 +283,11 @@ fmHook = dict(
     type = 'FeatureMapHook'
 )
 
-epoch_to_model_hook = dict(
-    type = "SetEpochDataInModelHook",
-    submodule = "roi_head.lambda_params",
-    jump = 1
-)
+# epoch_to_model_hook = dict(
+#     type = "SetEpochDataInModelHook",
+#     submodule = "roi_head.lambda_params",
+#     jump = 1
+# )
 custom_hooks = [ viz_debugHookRoIHead, viz_debugHookRoIHeadExtra]#epoch_to_model_hook,
 
 
@@ -296,7 +297,7 @@ custom_imports=dict(
              'boris.standard_roi_head_with_extra',
              'boris.experimental_hook',
              'boris.get_feature_maps_hook',
-             'boris.set_epoch_data_in_model_hook',
+             #'boris.set_epoch_data_in_model_hook',
              'boris.user_loading',
              'boris.my_coco',
              'boris.user_formating'])

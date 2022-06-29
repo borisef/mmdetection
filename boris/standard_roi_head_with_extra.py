@@ -69,14 +69,21 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
             with_grad_reversal = True,
             image_instance_weight = [0.1, 1], #for domain adaptation weighting
             annotation_per_image = True, #is domain annotation per image (or per target)
-            lambda_params = dict(max_epochs = 100,
-                                            iters_per_epoch = 20,
-                                            power_factor = 3.0,
-                                            default_lambda = None,
-                                            starting_epoch = 0,
-                                            curr_epoch = 0,
-                                            curr_iter = 0,
-                                            internal_epoch_counter = True)
+            # lambda_params = dict(max_epochs = 100,
+            #                                 iters_per_epoch = 20,
+            #                                 power_factor = 3.0,
+            #                                 default_lambda = None,
+            #                                 starting_epoch = 0,
+            #                                 curr_epoch = 0,
+            #                                 curr_iter = 0,
+            #                                 internal_epoch_counter = True)
+            lambda_params = dict(start_end_max_epoch=[0, 100, 100],
+                                 iters_per_epoch=200,
+                                 power_factor=3.0,
+                                 default_lambda=None,
+                                 init_epoch=0,
+                                 _curr_epoch=0,
+                                 _curr_iter = 0)
         )
 
 
@@ -105,6 +112,8 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                  init_cfg=init_cfg)
         #build extra head
         if extra_bbox_head is not None:
+            #because it will add 'background' and we need compensate (hack)
+            extra_bbox_head['num_classes'] = extra_bbox_head['num_classes']-1
             self.init_extra_bbox_head(bbox_roi_extractor, extra_bbox_head)
             self.extra_head_params = None
             self.init_default_extra_head_params()
@@ -122,19 +131,35 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         self.extra_bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)#TODO: B: may be can use bbox_roi_extractor
         self.extra_bbox_head = build_head(extra_bbox_head)
     def calc_grl_lambda(self):
+
+
         grl_lambda = 1.0  # B
         if (self.extra_head_params['lambda_params'] is not None):
-            if (self.extra_head_params['lambda_params']['internal_epoch_counter']):
-                self.extra_head_params['lambda_params']['curr_iter'] = self.extra_head_params['lambda_params']['curr_iter'] + 1
-                self.extra_head_params['lambda_params']['curr_epoch'] = self.extra_head_params['lambda_params']['curr_iter'] / \
-                                                              self.extra_head_params['lambda_params']['iters_per_epoch']
             if (self.extra_head_params['lambda_params']['default_lambda'] is not None):
                 grl_lambda = self.extra_head_params['lambda_params']['default_lambda']
             else:
-                if (self.extra_head_params['lambda_params']['curr_epoch'] < self.extra_head_params['lambda_params']['starting_epoch']):
+                self.extra_head_params['lambda_params']['_curr_iter'] = self.extra_head_params['lambda_params'][
+                                                                            '_curr_iter'] + 1
+                self.extra_head_params['lambda_params']['_curr_epoch'] = self.extra_head_params['lambda_params'][
+                                                                             'init_epoch'] + \
+                                                                         (self.extra_head_params['lambda_params'][
+                                                                              '_curr_iter'] / (1.0 +
+                                                                                               self.extra_head_params[
+                                                                                                   'lambda_params'][
+                                                                                                   'iters_per_epoch']))
+                print(self.extra_head_params['lambda_params']['_curr_epoch'])
+                if (self.extra_head_params['lambda_params']['_curr_epoch'] < self.extra_head_params['lambda_params']['start_end_max_epoch'][0]):
                     grl_lambda = 0.0
                 else:
-                    p = float(self.extra_head_params['lambda_params']['curr_epoch']) / self.extra_head_params['lambda_params']['max_epochs']
+                    if (self.extra_head_params['lambda_params']['_curr_epoch'] >
+                            self.extra_head_params['lambda_params']['start_end_max_epoch'][1]):
+                        self.extra_head_params['lambda_params']['_curr_epoch'] = \
+                            self.extra_head_params['lambda_params']['start_end_max_epoch'][1]
+                    p = float(self.extra_head_params['lambda_params']['_curr_epoch'] - self.extra_head_params['lambda_params']['start_end_max_epoch'][0]) / (self.extra_head_params['lambda_params']['start_end_max_epoch'][2] - \
+                                                                                                                                                             self.extra_head_params[
+                                                                                                                                                                 'lambda_params'][
+                                                                                                                                                                 'start_end_max_epoch'][
+                                                                                                                                                                 0])
                     p, power = min(p, 1.0), self.extra_head_params['lambda_params']['power_factor']
                     grl_lambda = 2. / (1. + np.exp(-power * p)) - 1
         return grl_lambda
