@@ -6,8 +6,9 @@ from  mmdet.models.roi_heads.standard_roi_head import StandardRoIHead
 from torch.autograd import Function
 import numpy as np
 
-
-def redefine_dict_params(new_dict, orig_dict):
+#general function
+# updates orig_dict recoursively, replaces only new fields
+def update_dict_params(new_dict, orig_dict):
     if(new_dict is None):
         return orig_dict
     # update keys one by one
@@ -22,7 +23,7 @@ def redefine_dict_params(new_dict, orig_dict):
         if (type(new_dict[key]) != type(orig_dict[key])):
             if(('dict' in str(type(orig_dict[key])).lower()) and
                     ('dict' in str(type(new_dict[key])).lower())):
-                orig_dict[key] = redefine_dict_params(new_dict[key], orig_dict[key])
+                orig_dict[key] = update_dict_params(new_dict[key], orig_dict[key])
                 continue
             else:
                 raise TypeError(key + "wrong type")
@@ -63,20 +64,14 @@ class GradientReversalFn(Function):
 class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
     """Same  as StandardRoIHead with extra BBoxHead"""
 
-    def init_default_extra_head_params(self):
+    # inner function to init default
+    def _init_default_extra_head_params(self):
         self.extra_head_params = dict(
-            extra_label = 'domain_id',
+            _extra_label = None,
             with_grad_reversal = True,
             image_instance_weight = [0.1, 1], #for domain adaptation weighting
-            annotation_per_image = True, #is domain annotation per image (or per target)
-            # lambda_params = dict(max_epochs = 100,
-            #                                 iters_per_epoch = 20,
-            #                                 power_factor = 3.0,
-            #                                 default_lambda = None,
-            #                                 starting_epoch = 0,
-            #                                 curr_epoch = 0,
-            #                                 curr_iter = 0,
-            #                                 internal_epoch_counter = True)
+            #TODO: make annotation_per_image obsolete
+            #annotation_per_image = False, #is domain annotation per image (or per target)
             lambda_params = dict(start_end_max_epoch=[0, 100, 100],
                                  iters_per_epoch=200,
                                  power_factor=3.0,
@@ -116,13 +111,13 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
             extra_bbox_head['num_classes'] = extra_bbox_head['num_classes']-1
             self.init_extra_bbox_head(bbox_roi_extractor, extra_bbox_head)
             self.extra_head_params = None
-            self.init_default_extra_head_params()
+            self._init_default_extra_head_params()
             self.with_extra_bbox = True
         else:
             self.with_extra_bbox = False
 
 
-        self.extra_head_params = redefine_dict_params(extra_head_params, self.extra_head_params)
+        self.extra_head_params = update_dict_params(extra_head_params, self.extra_head_params)
 
 
 
@@ -147,7 +142,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
                                                                                                self.extra_head_params[
                                                                                                    'lambda_params'][
                                                                                                    'iters_per_epoch']))
-                print(self.extra_head_params['lambda_params']['_curr_epoch'])
+                #print(self.extra_head_params['lambda_params']['_curr_epoch'])
                 if (self.extra_head_params['lambda_params']['_curr_epoch'] < self.extra_head_params['lambda_params']['start_end_max_epoch'][0]):
                     grl_lambda = 0.0
                 else:
@@ -188,7 +183,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         # assign gts and sample proposals
         # B: it was alreday done in father's forward, re-use sampling_results
         sampling_results = self.sampling_results
-        #B: Note that sampling results contain wrong labels (need to be replaced with extra_labels somehow)
+        #B: The sampling results contain wrong labels (is replaced with extra_labels later )
 
         # bbox head forward and loss
         if self.with_extra_bbox:
@@ -220,22 +215,24 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
         rois = bbox2roi([res.bboxes for res in sampling_results])
         extra_bbox_results = self._extra_bbox_forward(x, rois)
 
-        extra_label = None
+        #extra_label = None
+        if(self.extra_head_params['_extra_label'] is None):
+            self.extra_head_params['_extra_label'] = img_metas[0]['extra_label_name']
 
-        if(self.extra_head_params['annotation_per_image']):
-            # replace sampling_results[0].pos_gt_labels[:] by extra label
-            for i,sr in enumerate(sampling_results):
-                extra_label = gt_labels[i][0] #get it from any of gt_labels[i]
-                sr.pos_gt_labels[:]=extra_label
-
-        else:
-            e_l_str = self.extra_head_params['extra_label']
-            for i, sr in enumerate(sampling_results):
-                label_per_target = gt_labels[i]
-                mapped_targets = sr.pos_assigned_gt_inds
-                extra_label_for_background = img_metas[i][e_l_str]
-                for j,t in enumerate(mapped_targets):
-                    sr.pos_gt_labels[j] = label_per_target[t]
+        # if(self.extra_head_params['annotation_per_image']):#TODO: remove
+        #     # replace sampling_results[0].pos_gt_labels[:] by extra label
+        #     for i,sr in enumerate(sampling_results):
+        #         extra_label = gt_labels[i][0] #get it from any of gt_labels[i]
+        #         sr.pos_gt_labels[:]=extra_label
+        #
+        # else:
+        e_l_str = self.extra_head_params['_extra_label']
+        for i, sr in enumerate(sampling_results):
+            label_per_target = gt_labels[i]
+            mapped_targets = sr.pos_assigned_gt_inds
+            extra_label_for_background = img_metas[i][e_l_str]
+            for j,t in enumerate(mapped_targets):
+                sr.pos_gt_labels[j] = label_per_target[t]
 
 
 
@@ -247,7 +244,7 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
 
         # make sure extra_label_for_background is applied for each negative sample
         # make sure positive and negative samples are correctly weighted
-        e_l_str = self.extra_head_params['extra_label']
+        e_l_str = self.extra_head_params['_extra_label']
         num_bef = 0  # counter because of batch
         bbox_targets[1][:] = self.extra_head_params['image_instance_weight'][1]  # init all with weight for positive
         for i, sr in enumerate(sampling_results):

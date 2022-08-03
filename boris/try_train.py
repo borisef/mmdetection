@@ -25,11 +25,11 @@ import train_wrap_utils_home
 #cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
 #cfg_file = 'configs/traffic_config_with_domain_adaptation.py'
 
-#cfg_file = 'configs/traffic_config_with_da_Mix_Gray3.py'
+cfg_file = 'configs/traffic_config_with_da_Mix3image_domains_resnet50_v3.py'
 #cfg_file = 'configs/traffic_config_with_da_Mix3domains.py'
 #cfg_file = "configs/traffic_config_with_da_Mix3instance_domains_resnet18.py"
 #cfg_file = 'configs/traffic_config_with_da_Mix3image_domains_resnet18.py'
-cfg_file = "configs/traffic_config_with_da_Mix3instance_domains_resnet50_v1.py"
+#cfg_file = "configs/traffic_config_with_da_Mix3instance_domains_resnet50_v2.py"
 #cfg_file = 'configs/traffic_config_smoo_resnet50.py'
 
 cp = ArgConfigParams() # create inctance of class

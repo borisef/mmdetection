@@ -55,9 +55,12 @@ class MyCocoDataset(CocoDataset):
             gt_extra_labels = np.array([], dtype=np.int64)
 
         ann = dict(
-            extra_labels= gt_extra_labels
+            extra_labels= gt_extra_labels,
+            extra_label_name = self.extra_label
         )
         if(len(gt_extra_labels) == 0):
-            ann = dict()
+            ann = dict(
+                extra_label_name=self.extra_label
+            )
 
         return ann

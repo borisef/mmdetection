@@ -4,19 +4,19 @@ import numpy as np
 @PIPELINES.register_module()
 class LoadExtraAnnotations:
     """Load domain annotations.
-    Like LoadExtraAnnotations
-    but instead of labels load index of domain
+    Like LoadAnnotations
+    but instead of labels load index of domain or someth like that based on name
 
 
     """
 
     def __init__(self,
-                 map_name_to_id = None,
-                 annotation_per_image = True,
-                 name=None):
-        self.name = name
+                 skip_on_error = False,
+                 map_name_to_id = None
+                 ):
+
         self.map_name_to_id = map_name_to_id
-        self.annotation_per_image = annotation_per_image
+        self.skip_on_error = skip_on_error
 
 
     def _load_extra_labels(self, results):
@@ -28,26 +28,41 @@ class LoadExtraAnnotations:
         Returns:
             dict: The dict contains loaded label annotations.
         """
+        #extra_name = self.name
+        if('extra_label_name' in results['ann_info']):
+            extra_name = results['ann_info']['extra_label_name']
+        else:
+            if(self.skip_on_error):
+                return results
+            else:
+                raise ValueError("No  extra_label found in data within ann_info.\n")
 
-        # if we suppose domain is one per image
-        if(self.annotation_per_image):
-            extra_label = results['img_info'][self.name]
-            # may be map from name to id
-            if(self.map_name_to_id is not None):
-                extra_label = self.map_name_to_id[extra_label]
+        if(extra_name in results['img_info']):
+            extra_label = results['img_info'][extra_name]
+            results['extra_label_name'] = extra_name
+        else:
+            if (self.skip_on_error):
+                return results
+            else:
+                raise AssertionError(extra_name + " is not in image attributes")
+        if (self.map_name_to_id is not None):
+            extra_label = self.map_name_to_id[extra_label]
 
-            num_annotations = len(results['ann_info'])
-            results['gt_extra_labels'] = np.array([extra_label]*num_annotations,
-                                                  dtype=results['gt_labels'].dtype)
-            results[self.name] = extra_label#TODO: remove this or gt_extra_label_per_image
-            results['gt_extra_label_per_image'] = extra_label
-        else: # TODO: implement the case with domain is one per bbox
-            #see _parse_ann_info function in coco
-            num_annotations = len(results['ann_info'])
-            results['gt_extra_labels'] = np.array(results['ann_info']['extra_labels'], dtype=results['gt_labels'].dtype)
-            results['gt_extra_label_per_image'] = results['img_info'][self.name]
-            results[self.name] = results['img_info'][self.name]
-            #raise NotImplementedError
+        #init all targets
+        num_annotations = len(results['ann_info']['labels'])
+        results['gt_extra_labels'] = np.array([extra_label] * num_annotations,
+                                              dtype=results['gt_labels'].dtype)
+        results[extra_name] = extra_label  # TODO: remove this or gt_extra_label_per_image
+        results['gt_extra_label_per_image'] = extra_label
+
+        #now replace extra_label per target if exists
+        if('extra_labels' in results['ann_info']):
+            for i in range(num_annotations):
+                if (self.map_name_to_id is not None):
+                    results['gt_extra_labels'][i] = self.map_name_to_id[results['ann_info']['extra_labels'][i]]
+                else:
+                    results['gt_extra_labels'][i] = results['ann_info']['extra_labels'][i]
+
 
         return results
 
@@ -61,8 +76,8 @@ class LoadExtraAnnotations:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        repr_str += f'(annotation_per_image={self.annotation_per_image}, '
-        repr_str += f'name={self.name}, '
+        # repr_str = self.__class__.__name__
+        # repr_str += f'(annotation_per_image={self.annotation_per_image}, '
+        # repr_str += f'name={self.name}, '
 
-        return repr_str
+        return self.__class__.__name__
