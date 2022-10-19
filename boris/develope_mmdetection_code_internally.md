@@ -1,16 +1,16 @@
 ## Intro 
 
-Congratulations! You are about to develop mmdetection code. We want this code to be useful and maintainable. 
+Congratulations! You are about to develop _mmdetection_ code. We want this code to be useful and maintainable. 
 We also want to be able to keep this code up-to-date with the web version. To achieve this, we all will need to stick to some basic guidelines. 
 
 
 ## Git Guidelines
 
 #### Remote repositories
-Our repository for `mmdetection` code is XXX. First of all you suppose to `fork` it. 
-Let's suppose your fork is XXX
+Our repository for _mmdetection_ code is `XXX`. First of all you suppose to `fork` it. 
+Let's suppose your fork is `XXX`
 
-Let's list all the remote repositories your git "knows":
+Let's list all the remote repositories your _git_ "knows":
 
 ``````
 git remote -v
@@ -35,7 +35,7 @@ pull/fetch 39484 branch_name
 
 #### Branches and Tags
 
-The most updated _group code_ will usually be under `master` branch in `39484`. 
+The most updated code will usually be under `master` branch in `39484`. 
 We use tags to keep track of versions.Official releases will always be tagged. 
 We recommend to follow XXX in order to be up-to-date with the latest release. 
 Obviously, each developer is supposed to develop in his/her own branch or project branch (not `master`).
@@ -69,7 +69,6 @@ Here are guidelines for code developers:
 It is recommended to have unittest, comments and documentation for each piece of your code. But our guidelines are simple: 
 
 * You have to deliver unittest with your __group code__
-* You have to deliver appropriate comments to your __group code__ 
 * If your __group code__ is a standalone module or capability 
 (for example: adversarial training, domain adaptation, hierchical loss) you have to deliver documentation with tutorial and example. 
 BTW, sometimes unittest can serve as example. 
