@@ -339,6 +339,90 @@ class Collect:
 
 
 @PIPELINES.register_module()
+class AddFieldToImgMetas:
+    """
+    TODO
+    """
+
+    def __init__(self,
+                 fields = [],
+                 values=[],
+                 replace = True):
+        self.fields = fields
+        self.values = values
+        self.replace = replace
+
+    def __call__(self, results):
+        """
+        TODO
+        """
+        if('img_metas' not in results):
+            raise AssertionError('img_metas not in results')
+        for f,v in zip(self.fields, self.values):
+            if not(f in results['img_metas'].data and self.replace==False):
+                results['img_metas'].data[f] = v
+
+
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + \
+               f'(fields={self.fields}, values={self.values}, replace={self.replace})'
+
+@PIPELINES.register_module()
+class RobustCollect(Collect):
+    def __call__(self, results):
+        """
+        Exactly like Collect but can skip non-existant fields rather than crash
+        """
+
+        data = {}
+        img_meta = {}
+        for key in self.meta_keys:
+            if key in results:
+                img_meta[key] = results[key]
+            # else:
+            #     img_meta[key] = None
+        data['img_metas'] = DC(img_meta, cpu_only=True)
+        for key in self.keys:
+            if key in results:
+                data[key] = results[key]
+            # else:
+            #     data[key] = None
+        return data
+
+@PIPELINES.register_module()
+class AddFields:
+    """
+    TODO
+    """
+
+    def __init__(self,
+                 fields = [],
+                 values=[],
+                 replace = True):
+        self.fields = fields
+        self.values = values
+        self.replace = replace
+
+    def __call__(self, results):
+        """
+        TODO
+        """
+        for f,v in zip(self.fields, self.values):
+            if not(f in results and self.replace==False):
+                results[f] = v
+
+
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + \
+               f'(fields={self.fields}, values={self.values}, replace={self.replace})'
+
+
+
+@PIPELINES.register_module()
 class WrapFieldsToLists:
     """Wrap fields of the data dictionary into lists for evaluation.
 

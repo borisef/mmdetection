@@ -87,6 +87,7 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                 gt_bboxes_ignore = [None for _ in range(num_imgs)]
             sampling_results = []
             for i in range(num_imgs):
+                #<B> I can change self.bbox_sampler.neg_pos_ub based on img_metas
                 assign_result = self.bbox_assigner.assign(
                     proposal_list[i], gt_bboxes[i], gt_bboxes_ignore[i],
                     gt_labels[i])
@@ -95,7 +96,10 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     proposal_list[i],
                     gt_bboxes[i],
                     gt_labels[i],
-                    feats=[lvl_feat[i][None] for lvl_feat in x])
+                    feats=[lvl_feat[i][None] for lvl_feat in x],
+                    img_metas = img_metas[i]
+                )
+                # <B> I can change sampling_results at the end
                 sampling_results.append(sampling_result)
         self.sampling_results = sampling_results #B: keep for future use
         losses = dict()

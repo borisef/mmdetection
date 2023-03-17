@@ -247,8 +247,10 @@ class AnchorHead(BaseDenseHead, BBoxTestMixin):
         assign_result = self.assigner.assign(
             anchors, gt_bboxes, gt_bboxes_ignore,
             None if self.sampling else gt_labels)
-        sampling_result = self.sampler.sample(assign_result, anchors,
-                                              gt_bboxes)
+        # sampling_result = self.sampler.sample(assign_result, anchors,
+        #                                        gt_bboxes)
+        #
+        sampling_result = self.sampler.sample(assign_result, anchors, gt_bboxes, img_metas=img_meta)
 
         num_valid_anchors = anchors.shape[0]
         bbox_targets = torch.zeros_like(anchors)

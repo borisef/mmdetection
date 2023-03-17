@@ -19,8 +19,9 @@ from  train_cfg_utils import  ArgConfigParams, update_config_from_args
 import train_wrap_utils_home
 
 #cfg_file = 'configs/kiti_config.py'
-#cfg_file = 'configs/car_damage_config.py'
-cfg_file = 'configs/traffic_config_resnet18.py'
+cfg_file = 'configs/car_damage_config.py'
+cfg_file = 'configs/car_damage_config_2datasets.py'
+#cfg_file = 'configs/traffic_config_resnet18.py'
 #cfg_file = 'configs/car_damage_config_extra_bbox_head.py'
 #cfg_file = 'configs/car_damage_config_with_domain_adaptation.py'
 #cfg_file = 'configs/traffic_config_with_domain_adaptation.py'
