@@ -95,7 +95,8 @@ model = dict(
                 match_low_quality=False,
                 ignore_iof_thr=-1),
             sampler=dict(
-                type='RandomSamplerWithIgnore',
+                #type='RandomSamplerWithIgnore',
+                type='OHEMSamplerWithIgnore',
                 num=512,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
@@ -116,28 +117,6 @@ dataset_type = 'CocoDataset'
 data_root = 'car_damage/'
 img_norm_cfg = dict(
     mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
-
-train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadExtraAnnotations', annotation_per_image=True, name="ignore_negative"),  # load domain_id
-    dict(
-        type='Resize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
-        multiscale_mode='value',
-        keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(
-        type='Normalize',
-        mean=[103.53, 116.28, 123.675],
-        std=[1.0, 1.0, 1.0],
-        to_rgb=False),
-    dict(type='Pad', size_divisor=32),
-    dict(type='DefaultFormatBundle'),
-    dict(type='RobustCollect', keys=['img', 'gt_bboxes', 'gt_labels'], meta_keys=meta_keys)
-
-]
 
 train_pipeline1 = [
     dict(type='LoadImageFromFile'),
@@ -160,27 +139,8 @@ train_pipeline1 = [
 
 ]
 
-train_pipeline2 = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
-
-    dict(
-        type='Resize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
-        multiscale_mode='value',
-        keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(
-        type='Normalize',
-        mean=[103.53, 116.28, 123.675],
-        std=[1.0, 1.0, 1.0],
-        to_rgb=False),
-    dict(type='Pad', size_divisor=32),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'], meta_keys=meta_keys),
+train_pipeline2 = train_pipeline1 + [
     dict(type='AddFieldToImgMetas', fields = ['ignore_negatives'], values = [1], replace = False),
-
 ]
 
 
@@ -325,6 +285,8 @@ custom_imports=dict(
     imports=['boris.kitti_Dataset',
              'boris.experimental_hook',
              'boris.get_feature_maps_hook',
+             'mmdet.core.bbox.samplers.boris.custom_sampler',
+             'mmdet.datasets.pipelines.boris.custom_formating',
              'boris.user_loading',
              'boris.user_formating'])
 

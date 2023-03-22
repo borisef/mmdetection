@@ -81,17 +81,3 @@ class RandomSampler(BaseSampler):
         else:
             return self.random_choice(neg_inds, num_expected)
 
-@BBOX_SAMPLERS.register_module()
-class RandomSamplerWithIgnore(RandomSampler):
-    """Random sampler.
-
-    """
-    def _sample_neg(self, assign_result, num_expected, **kwargs):
-        #TODO: if img_meta
-        call_num_expected = num_expected
-        if 'img_metas' in kwargs:
-            if('ignore_negatives' in kwargs['img_metas']):
-                if(kwargs['img_metas']['ignore_negatives'] == 1):
-                    call_num_expected = 0
-        """Randomly sample some negative samples."""
-        return super()._sample_neg( assign_result, call_num_expected, **kwargs)

@@ -42,6 +42,7 @@ def test_random_sampler():
     assert len(sample_result.neg_bboxes) == len(sample_result.neg_inds)
 
 
+
 def test_random_sampler_empty_gt():
     assigner = MaxIoUAssigner(
         pos_iou_thr=0.5,
@@ -327,3 +328,6 @@ def test_score_hlr_sampler_empty_pred():
         assign_result, bboxes, gt_bboxes, gt_labels, feats=feats)
     assert len(sample_result.pos_bboxes) == len(sample_result.pos_inds)
     assert len(sample_result.neg_bboxes) == len(sample_result.neg_inds)
+
+if __name__ == "__main__":
+    test_ohem_sampler()
