@@ -16,7 +16,7 @@ class BBoxHeadWithWeightPerImage():
                            pos_gt_labels,img_metas, cfg)
 
 
-        if (img_metas is not None and 'roi_head.loss_weight' in img_metas):
+        if (img_metas is not None and img_metas is not [] and 'roi_head.loss_weight' in img_metas):
             if (img_metas['roi_head.loss_weight'] != 1):
                 label_weights = results[1]
                 bbox_weights = results[3]

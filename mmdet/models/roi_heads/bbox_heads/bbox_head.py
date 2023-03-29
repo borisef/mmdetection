@@ -194,7 +194,7 @@ class BBoxHead(BaseModule):
                     gt_labels,
                     rcnn_train_cfg,
                     concat=True,
-                    img_metas = None):
+                    img_metas = []):
         """Calculate the ground truth for all samples in a batch according to
         the sampling_results.
 

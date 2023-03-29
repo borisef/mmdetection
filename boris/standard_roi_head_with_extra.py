@@ -240,7 +240,11 @@ class StandardRoIHeadWithExtraBBoxHead(StandardRoIHead):
 
 
         bbox_targets = self.extra_bbox_head.get_targets(sampling_results, gt_bboxes,
-                                                  gt_labels, self.train_cfg)
+                                                        gt_labels,
+                                                        self.train_cfg,
+                                                        concat = True,
+                                                        img_metas = img_metas # for weighting)
+                                                        )
 
         # make sure extra_label_for_background is applied for each negative sample
         # make sure positive and negative samples are correctly weighted
