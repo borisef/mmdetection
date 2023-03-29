@@ -144,8 +144,10 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         rois = bbox2roi([res.bboxes for res in sampling_results])
         bbox_results = self._bbox_forward(x, rois)
 
+        #B: TODO: bbox_targets return weights (2nd in tuple of results) not partitioned by images - may need to do it here to weight loss correctly
         bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
-                                                  gt_labels, self.train_cfg)
+                                                  gt_labels, self.train_cfg,
+                                                  img_metas = img_metas)# B: add img metas
 
         loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
                                         bbox_results['bbox_pred'], rois,

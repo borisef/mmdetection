@@ -120,7 +120,9 @@ class BBoxHead(BaseModule):
         return cls_score, bbox_pred
 
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
-                           pos_gt_labels, cfg):
+                           pos_gt_labels,
+                           img_metas,#<RFL> can not put last to cal it with multi
+                           cfg):
         """Calculate the ground truth for proposals in the single image
         according to the sampling results.
 
@@ -191,7 +193,8 @@ class BBoxHead(BaseModule):
                     gt_bboxes,
                     gt_labels,
                     rcnn_train_cfg,
-                    concat=True):
+                    concat=True,
+                    img_metas = None):
         """Calculate the ground truth for all samples in a batch according to
         the sampling_results.
 
@@ -244,7 +247,10 @@ class BBoxHead(BaseModule):
             neg_bboxes_list,
             pos_gt_bboxes_list,
             pos_gt_labels_list,
-            cfg=rcnn_train_cfg)
+            img_metas, #<RFL>
+            cfg=rcnn_train_cfg,
+
+        )
 
         if concat:
             labels = torch.cat(labels, 0)
@@ -592,3 +598,5 @@ class BBoxHead(BaseModule):
             bboxes -= offsets
             batch_dets = torch.cat([bboxes, scores], dim=2)
             return batch_dets, labels
+
+
