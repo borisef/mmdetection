@@ -121,7 +121,7 @@ class BBoxHead(BaseModule):
 
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
                            pos_gt_labels,
-                           img_metas,#<RFL> can not put last to cal it with multi
+                           img_metas,#<RFL> new param: can not put last to cal it with multi
                            cfg):
         """Calculate the ground truth for proposals in the single image
         according to the sampling results.
@@ -187,6 +187,17 @@ class BBoxHead(BaseModule):
             label_weights[-num_neg:] = 1.0
 
         return labels, label_weights, bbox_targets, bbox_weights
+
+
+    # old signiture for backward compatability
+    # def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
+    #                         pos_gt_labels,
+    #                         #img_metas,#<RFL> can not put last to cal it with multi
+    #                         cfg):
+    #      img_metas=None
+    #      return self._get_target_single(pos_bboxes=pos_bboxes,neg_bboxes=neg_bboxes,
+    #                                pos_gt_bboxes=pos_gt_bboxes,pos_gt_labels=pos_gt_labels,
+    #                                img_metas=img_metas,cfg=cfg)
 
     def get_targets(self,
                     sampling_results,

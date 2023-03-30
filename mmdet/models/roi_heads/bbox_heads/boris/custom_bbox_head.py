@@ -12,8 +12,8 @@ from mmdet.models.roi_heads import Shared2FCBBoxHead
 class BBoxHeadWithWeightPerImage():
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
                            pos_gt_labels, img_metas, cfg):
-        results = super()._get_target_single(pos_bboxes, neg_bboxes, pos_gt_bboxes,
-                           pos_gt_labels,img_metas, cfg)
+        results = self._get_target_single(pos_bboxes=pos_bboxes, neg_bboxes=neg_bboxes, pos_gt_bboxes=pos_gt_bboxes,
+                           pos_gt_labels=pos_gt_labels, cfg=cfg)
 
 
         if (img_metas is not None and img_metas is not [] and 'roi_head.loss_weight' in img_metas):
@@ -34,5 +34,5 @@ class BBoxHeadWithWeightPerImage():
 class BBoxHeadCustom(BBoxHeadWithWeightPerImage,BBoxHead):
     pass
 @HEADS.register_module()
-class Shared2FCBBoxHeadWithWeightPerImage(BBoxHeadWithWeightPerImage,Shared2FCBBoxHead):
+class Shared2FCBBoxHeadWithWeightPerImage(Shared2FCBBoxHead,BBoxHeadWithWeightPerImage):
     pass
