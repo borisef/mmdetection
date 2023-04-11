@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from mmcv.cnn import ConvModule
 from mmcv.ops import batched_nms
 
-from ...builder import HEADS
+from mmdet.models.builder import HEADS
 from mmdet.models.dense_heads.rpn_head import RPNHead
 
 #<RFL>
@@ -23,7 +23,7 @@ class HeadWithWeightPerImage():
                             img_meta,
                             label_channels=1,
                             unmap_outputs=True):
-        #call default _get_targets_single
+        #call default _get_targets_single from parent of the class (RPNHead in our case)
         results = super()._get_targets_single( flat_anchors,
                                                                    valid_flags,
                                                                    gt_bboxes,
@@ -49,6 +49,6 @@ class HeadWithWeightPerImage():
 @HEADS.register_module()
 class RPNHeadWithWeightPerImage(HeadWithWeightPerImage,RPNHead):
     pass
-
+#REMARK: Only RPNHead with such capability is implemented for now, but any other head inherited from AnchorHead can be easily updated too
 
 

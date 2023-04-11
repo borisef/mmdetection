@@ -9,12 +9,12 @@ from mmdet.models.builder import HEADS, build_loss
 from mmdet.models.roi_heads.bbox_heads.bbox_head import BBoxHead
 from mmdet.models.roi_heads import Shared2FCBBoxHead
 
-class BBoxHeadWithWeightPerImage():
+class CustomBBoxHeadWithWeightPerImage():
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
                            pos_gt_labels, img_metas, cfg):
-        results = self._get_target_single(pos_bboxes=pos_bboxes, neg_bboxes=neg_bboxes, pos_gt_bboxes=pos_gt_bboxes,
-                           pos_gt_labels=pos_gt_labels, cfg=cfg)
-
+        # TODO: how to use super instead self?
+        results = super()._get_target_single(pos_bboxes=pos_bboxes, neg_bboxes=neg_bboxes, pos_gt_bboxes=pos_gt_bboxes,
+                                             pos_gt_labels=pos_gt_labels, img_metas=None, cfg=cfg)
 
         if (img_metas is not None and img_metas is not [] and 'roi_head.loss_weight' in img_metas):
             if (img_metas['roi_head.loss_weight'] != 1):
@@ -29,10 +29,45 @@ class BBoxHeadWithWeightPerImage():
                 results = tuple(results)
         return results
 
-
 @HEADS.register_module()
-class BBoxHeadCustom(BBoxHeadWithWeightPerImage,BBoxHead):
+class BBoxHeadCustom(CustomBBoxHeadWithWeightPerImage, BBoxHead):
     pass
+    # def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
+    #                        pos_gt_labels, img_metas, cfg):
+    #     # TODO: how to use super instead self?
+    #     results = super()._get_target_single(pos_bboxes=pos_bboxes, neg_bboxes=neg_bboxes, pos_gt_bboxes=pos_gt_bboxes,
+    #                                       pos_gt_labels=pos_gt_labels,  img_metas= None, cfg=cfg)
+    #
+    #     if (img_metas is not None and img_metas is not [] and 'roi_head.loss_weight' in img_metas):
+    #         if (img_metas['roi_head.loss_weight'] != 1):
+    #             label_weights = results[1]
+    #             bbox_weights = results[3]
+    #             label_weights = label_weights * img_metas['roi_head.loss_weight']
+    #             bbox_weights = bbox_weights * img_metas['roi_head.loss_weight']
+    #
+    #             results = list(results)
+    #             results[1] = label_weights
+    #             results[3] = bbox_weights
+    #             results = tuple(results)
+    #     return results
 @HEADS.register_module()
-class Shared2FCBBoxHeadWithWeightPerImage(Shared2FCBBoxHead,BBoxHeadWithWeightPerImage):
+class Shared2FCBBoxHeadWithWeightPerImage(CustomBBoxHeadWithWeightPerImage, Shared2FCBBoxHead):
     pass
+    # def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
+    #                        pos_gt_labels, img_metas, cfg):
+    #     # TODO: how to use super instead self?
+    #     results = super()._get_target_single(pos_bboxes=pos_bboxes, neg_bboxes=neg_bboxes, pos_gt_bboxes=pos_gt_bboxes,
+    #                                       pos_gt_labels=pos_gt_labels, img_metas= None,  cfg=cfg)
+    #
+    #     if (img_metas is not None and img_metas is not [] and 'roi_head.loss_weight' in img_metas):
+    #         if (img_metas['roi_head.loss_weight'] != 1):
+    #             label_weights = results[1]
+    #             bbox_weights = results[3]
+    #             label_weights = label_weights * img_metas['roi_head.loss_weight']
+    #             bbox_weights = bbox_weights * img_metas['roi_head.loss_weight']
+    #
+    #             results = list(results)
+    #             results[1] = label_weights
+    #             results[3] = bbox_weights
+    #             results = tuple(results)
+    #     return results

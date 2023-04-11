@@ -1,0 +1,17 @@
+FAILED .dev_scripts/test_init_backbone.py::test_load_pretrained[/home/borisef/projects/mmdet/mmdetection/configs/swin/retinanet_swin-t-p4-w7_fpn_1x_coco.py] - IndexError: list index out of range
+FAILED .dev_scripts/test_init_backbone.py::test_load_pretrained[/home/borisef/projects/mmdet/mmdetection/configs/retinanet/retinanet_r101_caffe_fpn_mstrain_3x_coco.py] - AssertionError: RetinaNet: ResNet: init_cfg and pr...
+FAILED .dev_scripts/test_init_backbone.py::test_load_pretrained[/home/borisef/projects/mmdet/mmdetection/configs/retinanet/retinanet_x101_64x4d_fpn_mstrain_640-800_3x_coco.py] - AssertionError: RetinaNet: ResNeXt: init_c...
+FAILED .dev_scripts/test_init_backbone.py::test_load_pretrained[/home/borisef/projects/mmdet/mmdetection/configs/retinanet/retinanet_r101_fpn_mstrain_640-800_3x_coco.py] - AssertionError: RetinaNet: ResNet: init_cfg and ...
+FAILED mmdet/core/bbox/match_costs/match_cost.py::BBoxL1Cost:0
+FAILED mmdet/core/bbox/match_costs/match_cost.py::FocalLossCost:0
+FAILED mmdet/core/data_structures/general_data.py::GeneralData:0
+FAILED mmdet/core/data_structures/instance_data.py::InstanceData:0
+FAILED mmdet/core/export/pytorch2onnx.py::preprocess_example_input:0
+FAILED mmdet/datasets/pipelines/auto_augment.py::AutoAugment:0
+FAILED mmdet/models/backbones/csp_darknet.py::CSPDarknet:0
+FAILED mmdet/models/backbones/ssd_vgg.py::SSDVGG:0
+FAILED mmdet/models/dense_heads/gfl_head.py::GFLHead:0
+FAILED tests/test_data/test_datasets/test_panoptic_dataset.py::test_load_panoptic_style_json - RuntimeError: panopticapi is not installed, please install it by: pip install git+https://github.com/cocodataset/panopticapi....
+FAILED tests/test_data/test_pipelines/test_transform/test_transform.py::test_albu_transform - RuntimeError: Albu: albumentations is not installed
+FAILED tests/test_models/test_forward.py::test_yolox_random_size - assert (64, 96) == (64, 64)
+

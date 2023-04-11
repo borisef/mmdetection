@@ -7,6 +7,10 @@ from mmdet.core.bbox.samplers import (OHEMSampler, RandomSampler,
 
 from mmdet.core.bbox.samplers.boris.custom_sampler import RandomSamplerWithIgnore, OHEMSamplerWithIgnore
 
+#see test_sampler.py
+# we use same code: test_ohem_sampler, test_random_sampler but with ignore negatives
+
+
 def _context_for_ohem():
     import sys
     from os.path import dirname

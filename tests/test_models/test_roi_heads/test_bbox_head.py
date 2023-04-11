@@ -7,6 +7,7 @@ import torch
 from mmdet.core import bbox2roi
 from mmdet.models.roi_heads.bbox_heads import BBoxHead
 from .utils import _dummy_bbox_sampling
+#from utils import _dummy_bbox_sampling
 
 
 def test_bbox_head_loss():
@@ -249,3 +250,6 @@ def _demodata_refine_boxes(n_roi, n_img, rng=0):
         torch.from_numpy(p).sort(descending=True)[0] for p in _pos_is_gts
     ]
     return rois, labels, bbox_preds, pos_is_gts, img_metas
+
+if __name__=="__main__":
+    test_bbox_head_loss()

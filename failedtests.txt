@@ -1,0 +1,5 @@
+FAILED tests/test_data/test_datasets/test_panoptic_dataset.py::test_load_panoptic_style_json - RuntimeError: panopticapi is not installed, please install it by: pip install git+https://github.com/cocodataset/panopticapi....
+FAILED tests/test_data/test_pipelines/test_transform/test_transform.py::test_albu_transform - RuntimeError: Albu: albumentations is not installed
+FAILED tests/test_downstream/test_mmtrack.py::test_vid_fgfa_style_forward[./tests/data/configs_mmtrack/selsa_faster_rcnn_r101_dc5_1x.py] - ValueError: too many values to unpack (expected 2)
+FAILED tests/test_models/test_forward.py::test_yolox_random_size - assert (64, 96) == (64, 64)
+

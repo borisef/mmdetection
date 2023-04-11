@@ -2,8 +2,7 @@ num_classes = 5
 CLASSES = ['headlamp', 'rear_bumper', 'door', 'hood', 'front_bumper']
 meta_keys=('filename', 'ori_filename', 'ori_shape',
                             'img_shape', 'pad_shape', 'scale_factor', 'flip',
-                            'flip_direction', 'img_norm_cfg')
-
+                            'flip_direction', 'img_norm_cfg') #no new keys
 model = dict(
     type='FasterRCNN',
     backbone=dict(
@@ -25,7 +24,7 @@ model = dict(
         out_channels=256,
         num_outs=4), # like num strides
     rpn_head=dict(
-        type='RPNHeadWithWeightPerImage', #LOSS WEIGHT PER IMAGE
+        type='RPNHead',
         in_channels=256,
         feat_channels=256,
         anchor_generator=dict(
@@ -48,7 +47,7 @@ model = dict(
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            type='Shared2FCBBoxHeadWithWeightPerImage', #'Shared2FCBBoxHead', #<RFL> LOSS WEIGHT PER IMAGE
+            type='Shared2FCBBoxHead',
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
@@ -73,7 +72,7 @@ model = dict(
                 match_low_quality=True,
                 ignore_iof_thr=-1),
             sampler=dict(
-                type='RandomSamplerWithIgnore',
+                type='RandomSamplerWithIgnore', #<RFL> WITH IGNORE
                 num=256,
                 pos_fraction=0.5,
                 neg_pos_ub=-1,
@@ -96,7 +95,7 @@ model = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 #type='RandomSamplerWithIgnore',
-                type='OHEMSamplerWithIgnore',
+                type='OHEMSamplerWithIgnore', #<RFL> WITH IGNORE
                 num=512,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
@@ -135,19 +134,12 @@ train_pipeline1 = [
         to_rgb=False),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'], meta_keys=meta_keys),
-    dict(type='AddFieldToImgMetas', fields = ['rpn_head.loss_weight'], values = [0.75], replace = False),
-]
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'], meta_keys=meta_keys)
 
-train_pipeline1 = train_pipeline1 + [
-    dict(type='AddFieldToImgMetas', fields = ['rpn_head.loss_weight'], values = [100.01], replace = True),#<RFL> LOSS WEIGHT PER IMAGE
-    dict(type='AddFieldToImgMetas', fields=['roi_head.loss_weight'], values=[0.0], replace=True),#<RFL> LOSS WEIGHT PER IMAGE
 ]
 
 train_pipeline2 = train_pipeline1 + [
-    dict(type='AddFieldToImgMetas', fields = ['ignore_negatives'], values = [1], replace = False),
-    dict(type='AddFieldToImgMetas', fields = ['rpn_head.loss_weight'], values = [0.0], replace = True),#<RFL> LOSS WEIGHT PER IMAGE
-    dict(type='AddFieldToImgMetas', fields=['roi_head.loss_weight'], values=[100.01], replace=True),#<RFL> LOSS WEIGHT PER IMAGE
+    dict(type='AddFieldToImgMetas', fields = ['ignore_negatives'], values = [1], replace = False), #IGNORE NEGATIVES <#RFL>
 ]
 
 
@@ -259,7 +251,7 @@ lr_config = dict(
     step=[1,100])
 runner = dict(type='EpochBasedRunner', max_epochs=150)
 checkpoint_config = dict(interval=12)
-log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook')])
+log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
@@ -294,8 +286,6 @@ custom_imports=dict(
              'boris.get_feature_maps_hook',
              'mmdet.core.bbox.samplers.boris.custom_sampler',
              'mmdet.datasets.pipelines.boris.custom_formating',
-             'mmdet.models.dense_heads.boris.custom_rpn_head',
-             'mmdet.models.roi_heads.bbox_heads.boris.custom_bbox_head',
              'boris.user_loading',
              'boris.user_formating'])
 
