@@ -50,5 +50,6 @@ class HeadWithWeightPerImage():
 class RPNHeadWithWeightPerImage(HeadWithWeightPerImage,RPNHead):
     pass
 #REMARK: Only RPNHead with such capability is implemented for now, but any other head inherited from AnchorHead can be easily updated too
+# for example GuidedAnchorHead
 
 

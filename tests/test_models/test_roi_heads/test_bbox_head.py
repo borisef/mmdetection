@@ -7,7 +7,6 @@ import torch
 from mmdet.core import bbox2roi
 from mmdet.models.roi_heads.bbox_heads import BBoxHead
 from .utils import _dummy_bbox_sampling
-#from utils import _dummy_bbox_sampling
 
 
 def test_bbox_head_loss():

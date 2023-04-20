@@ -215,29 +215,29 @@ class Shared2FCBBoxHead(ConvFCBBoxHead):
             fc_out_channels=fc_out_channels,
             *args,
             **kwargs)
-
-@HEADS.register_module() #TODO: copy to another file
-class Shared2FCBBoxHeadWithDomainAdaptation(ConvFCBBoxHead):
-    #like Shared2FCBBoxHead + domain adaptation loss
-
-    def __init__(self, fc_out_channels=1024,
-                 loss_domain_cls=dict(
-                     type='CrossEntropyLoss',
-                     use_sigmoid=False,
-                     loss_weight=1.0),
-                 *args, **kwargs):
-        super(Shared2FCBBoxHeadWithDomainAdaptation, self).__init__(
-            num_shared_convs=0, #TODO: consider chage parameters  go back to ConvFCBBoxHead
-            num_shared_fcs=2,
-            num_cls_convs=0,
-            num_cls_fcs=0,
-            num_reg_convs=0,
-            num_reg_fcs=0,
-            fc_out_channels=fc_out_channels,
-            *args,
-            **kwargs)
-        self.loss_domain_cls = build_loss(loss_domain_cls)
-
+#
+# @HEADS.register_module() #TODO: copy to another file
+# class Shared2FCBBoxHeadWithDomainAdaptation(ConvFCBBoxHead):
+#     #like Shared2FCBBoxHead + domain adaptation loss
+#
+#     def __init__(self, fc_out_channels=1024,
+#                  loss_domain_cls=dict(
+#                      type='CrossEntropyLoss',
+#                      use_sigmoid=False,
+#                      loss_weight=1.0),
+#                  *args, **kwargs):
+#         super(Shared2FCBBoxHeadWithDomainAdaptation, self).__init__(
+#             num_shared_convs=0, #TODO: consider chage parameters  go back to ConvFCBBoxHead
+#             num_shared_fcs=2,
+#             num_cls_convs=0,
+#             num_cls_fcs=0,
+#             num_reg_convs=0,
+#             num_reg_fcs=0,
+#             fc_out_channels=fc_out_channels,
+#             *args,
+#             **kwargs)
+#         self.loss_domain_cls = build_loss(loss_domain_cls)
+#
 
 @HEADS.register_module()
 class Shared4Conv1FCBBoxHead(ConvFCBBoxHead):
