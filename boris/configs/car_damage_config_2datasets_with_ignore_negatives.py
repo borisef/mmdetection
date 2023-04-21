@@ -72,6 +72,7 @@ model = dict(
                 match_low_quality=True,
                 ignore_iof_thr=-1),
             sampler=dict(
+                #type='RandomSampler'
                 type='RandomSamplerWithIgnore', #<RFL> WITH IGNORE
                 num=256,
                 pos_fraction=0.5,
