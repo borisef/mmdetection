@@ -34,7 +34,7 @@ def test_custom_rpn_head_loss():
             allowed_border=0,
             pos_weight=-1,
             debug=False))
-    self = RPNHeadWithWeightPerImage(in_channels=1, train_cfg=cfg)
+    self = RPNHeadWithWeightPerImage(in_channels=1, train_cfg=cfg) #first use defalt should be like RPNHead
 
     # Anchor head expects a multiple levels of features per image
     feat = [
@@ -71,6 +71,7 @@ def test_custom_rpn_head_loss():
     assert onegt_cls_loss.item() > 0, 'cls loss should be non-zero'
     assert onegt_box_loss.item() > 0, 'box loss should be non-zero'
 
+    # now use  rpn_head.loss_weight and test it
     img_metas_1 = [{
         'img_shape': (s, s, 3),
         'scale_factor': 1,

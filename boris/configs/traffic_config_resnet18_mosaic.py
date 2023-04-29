@@ -244,9 +244,9 @@ train_data_multi_concat_dataset = dict(
 )
 #-----------------------------------------
 
-#train_data = train_dataset_multi_one_dataset # a) Mosaic(coco)
+train_data = train_dataset_multi_one_dataset # a) Mosaic(coco)
 #train_data = train_data_concat_mosaic_and_simple # b) Concat(Mosaic(Coco),coco)
-train_data = train_data_multi_concat_dataset # c) Mosaic(concat(coco,coco))
+#train_data = train_data_multi_concat_dataset # c) Mosaic(concat(coco,coco))
 
 
 data = dict(

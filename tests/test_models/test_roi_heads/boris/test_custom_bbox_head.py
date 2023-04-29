@@ -1,11 +1,8 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+#<RFL> Similar to  test_bbox_head_loss, some changes applied to test custom bbox head with weights
 import mmcv
-import numpy as np
-import pytest
 import torch
 
 from mmdet.core import bbox2roi
-from mmdet.models.roi_heads.bbox_heads import BBoxHead
 try:
     from ..utils import _dummy_bbox_sampling
 except:
@@ -16,9 +13,13 @@ except:
     from test_models.test_roi_heads.utils import _dummy_bbox_sampling
 
 from mmdet.models.roi_heads.bbox_heads.boris.custom_bbox_head import ConvFCBBoxHeadWithWeightPerImage,Shared2FCBBoxHeadWithWeightPerImage, BBoxHeadWithWeightPerImage
-#<RFL> This is copied  from test_bbox_head_loss in order to test custom bbox head with weights
+
 def _custom_bbox_head_loss(bbox_class=BBoxHeadWithWeightPerImage):
-    """Tests bbox head loss when truth is empty and non-empty."""
+    """Tests bbox head loss when truth is empty and non-empty.
+    This function can be used with any tested class
+    First we test legacy case (without weights) identical test as in test_bbox_head_loss.py
+    At the end we test with weight
+    """
     if(bbox_class is BBoxHeadWithWeightPerImage):
         self = bbox_class(in_channels=8, roi_feat_size=3)
     elif(bbox_class is Shared2FCBBoxHeadWithWeightPerImage):

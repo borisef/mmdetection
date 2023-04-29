@@ -70,8 +70,9 @@ But this is slightly more complicated and less practical. Talk to @borisef, if y
 * custom_bbox_head.py -- implementation
 * test_custom_rpn_head.py -- unittest 
 * test_custom_bbox_head.py -- unittest
-* custom_formatting.py -- implementation of `AddFieldToImgMetas`
-* standard_roi_head_with_extra.py, bbox_head.py, standard_roi_head.py, anchor_head.py -- small changes of legacy code
+* custom_formatting.py -- implementation of `AddFieldToImgMetas` 
+* standard_roi_head_with_extra.py, bbox_head.py, standard_roi_head.py, anchor_head.py -- small changes of legacy code,\
+  (see comments in code)
 
 ## Samplers with Ignore Negatives
 
