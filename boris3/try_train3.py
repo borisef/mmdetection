@@ -28,11 +28,23 @@ import train_wrap_utils_home
 import tools.train as train
 
 
+#Faster
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50_fpn_1x_coco_FULL.py" # works
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50-caffe_fpn_ms-1x_coco_FULL.py" #works
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50_fpn_1x_vehicles_FULL.py"#works
-config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r18_fpn_1x_vehicles_FULL.py"#works
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r18_fpn_1x_vehicles_FULL.py"#works
 
+#NAS-FCOS
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/nas_fcos_vehicles_FULL.py"#works
+
+#DETR
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/detr_r50_8xb2-150e_coco_FULL.py" #works
+
+#YOLOX - x
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_x_8xb8-300e_coco.py" # OUT of memory
+
+#YOLOX - s
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_s_8xb8-300e_coco.py" # works
 sys.argv.append(config_file)
 
 
