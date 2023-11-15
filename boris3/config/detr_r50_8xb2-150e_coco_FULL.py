@@ -1,4 +1,10 @@
 CLASSES = ('vehicles', 'Ambulance', 'Bus', 'car', 'Motorcycle','Truck')
+load_from = None #"/home/borisef/projects/mm/mmdetection/checkpoints/detr_r50_8xb2-150e_coco_20221023_153551-436d03e8.pth"
+load_from = '/home/borisef/data/mmdet_models/detr_r50_8xb2-150e_coco_20221023_153551-436d03e8.pth'
+resume = False
+work_dir = './work_dirs/detr_vehicles1_loadfrom'
+max_epochs = 50
+
 
 model = dict(
     type='DETR',
@@ -236,7 +242,7 @@ test_evaluator = dict(
     backend_args=None)
 
 # learning policy
-max_epochs = 150
+
 train_cfg = dict(
     type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=1)
 val_cfg = dict(type='ValLoop')
@@ -287,9 +293,7 @@ visualizer = dict(
     name='visualizer')
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
 log_level = 'INFO'
-load_from = None #"/home/borisef/projects/mm/mmdetection/checkpoints/detr_r50_8xb2-150e_coco_20221023_153551-436d03e8.pth"
-resume = True
 launcher = 'none'
-work_dir = './work_dirs/detr_vehicles1'
+
 
 example_images = data_root+'/test' #for output dir

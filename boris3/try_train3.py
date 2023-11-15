@@ -32,19 +32,27 @@ import tools.train as train
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50_fpn_1x_coco_FULL.py" # works
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50-caffe_fpn_ms-1x_coco_FULL.py" #works
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50_fpn_1x_vehicles_FULL.py"#works
-#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r18_fpn_1x_vehicles_FULL.py"#works
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r18_fpn_1x_vehicles_FULL.py"#works
 
 #NAS-FCOS
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/nas_fcos_vehicles_FULL.py"#works
 
 #DETR
-#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/detr_r50_8xb2-150e_coco_FULL.py" #works
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/detr_r50_8xb2-150e_coco_FULL.py" #works
 
 #YOLOX - x
-config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_x_8xb8-300e_coco.py" # OUT of memory
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_x_8xb8-300e_coco.py" # OUT of memory
 
 #YOLOX - s
-config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_s_8xb8-300e_coco.py" # works
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/myconfig_yolox_s_8xb8-300e_coco.py" # works
+
+#DINO
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_dino-5scale_swin-l_8xb2-36e_coco.py"#OOM
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_dino-4scale_r50_8xb2-12e_coco.py"#OOM
+
+#resnet strikes
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50-rsb-pre_fpn_1x_coco.py" #OOM
+
 sys.argv.append(config_file)
 
 

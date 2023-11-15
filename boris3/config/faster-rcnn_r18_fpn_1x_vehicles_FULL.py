@@ -141,8 +141,8 @@ train_dataloader = dict(
     dataset=dict(
         type='CocoDataset',
         data_root=data_root,
-        ann_file='test/annotations.json',
-        data_prefix=dict(img='test/'),
+        ann_file='train/annotations.json',
+        data_prefix=dict(img='train/'),
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         metainfo=dict(classes=CLASSES),
         pipeline=[
