@@ -51,8 +51,18 @@ config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/detr_r50_8xb2
 #config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_dino-4scale_r50_8xb2-12e_coco.py"#OOM
 
 #resnet strikes
-config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50-rsb-pre_fpn_1x_coco.py" #OOM
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/faster-rcnn_r50-rsb-pre_fpn_1x_coco.py" #OOM
 
+#effiviennet
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_retinanet_effb3_fpn_8xb4-crop896-1x_coco.py" #OOM
+
+#dab-detr
+#config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_dab-detr_r50_8xb2-50e_coco.py" #OOM
+
+#eff-det from projects
+config_file = "/home/borisef/projects/mm/mmdetection/boris3/config/config_efficientdet_effb0_bifpn_8xb16-crop512-300e_coco.py" # crashes in val
+
+##co-detr from projects
 sys.argv.append(config_file)
 
 
