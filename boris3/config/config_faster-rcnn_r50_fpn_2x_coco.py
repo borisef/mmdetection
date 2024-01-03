@@ -231,11 +231,12 @@ param_scheduler = [
 test_pipeline = [
     dict(backend_args=backend_args, type='LoadImageFromFile'),
     dict(keep_ratio=True,
-         scale=(600,600),
+         #scale=(600,600),
+         scale_factor = 1.0,
          type='Resize'),
-    dict(type = 'RandomCrop',
-         crop_size=(384, 384),
-         allow_negative_crop=False),
+    # dict(type = 'RandomCrop',
+    #      crop_size=(384, 384),
+    #      allow_negative_crop=False),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         meta_keys=(
@@ -255,10 +256,10 @@ train_pipeline = [
         #  scale=(
         # 416,
         # 416,),
-         scale_factor = 1.5, type='Resize'),
-    dict(type = 'RandomCrop',
-         crop_size=(384, 600),
-         allow_negative_crop=False),
+         scale_factor = 1.0, type='Resize'),
+    # dict(type = 'RandomCrop',
+    #      crop_size=(384, 600),
+    #      allow_negative_crop=False),
     dict(prob=0.5, type='RandomFlip'),
     dict(type='PackDetInputs'),
 ]
