@@ -1,4 +1,10 @@
 CLASSES = ('vehicles', 'Ambulance', 'Bus', 'car', 'Motorcycle','Truck')
+log_level = 'INFO'
+load_from = None
+resume = True
+launcher = 'none'
+work_dir = './work_dirs/faster-rcnn_r18_fpn_1x_vehicles'
+
 
 model = dict(
     type='FasterRCNN',
@@ -259,10 +265,5 @@ visualizer = dict(
                   dict(type='TensorboardVisBackend')],
     name='visualizer')
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
-log_level = 'INFO'
-load_from = None
-resume = True
-launcher = 'none'
-work_dir = './work_dirs/faster-rcnn_r18_fpn_1x_vehicles'
 
 example_images = data_root+'/test' #for output dir
