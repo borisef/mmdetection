@@ -1,7 +1,19 @@
 import os, glob
 import numpy as np
+from mmengine.config import Config
 
 EXTS = ['jpg', 'tif', 'png']
+
+
+
+
+def replace_test_in_cfg(config_file,temp_cnfig,test_imgs_dir,test_annotations):
+    cfg = Config.fromfile(config_file)
+    cfg['test_dataloader']['dataset']['data_root'] = ''
+    cfg['test_dataloader']['dataset']['data_prefix'] = {'img': test_imgs_dir}
+    cfg['test_dataloader']['dataset']['ann_file'] = test_annotations
+    cfg['test_evaluator']['ann_file'] = test_annotations
+    cfg.dump(temp_cnfig)
 
 
 def redefine_images(imgs):

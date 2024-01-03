@@ -8,24 +8,16 @@ import cv2
 import mmcv
 from mmdet.registry import VISUALIZERS
 from mmdet.apis import init_detector, inference_detector
-import train_wrap_utils_home
+from train_wrap_utils_home import replace_test_in_cfg
 from tools import test
 from tools.analysis_tools import confusion_matrix
 from tools.analysis_tools import test_robustness
-from mmengine.config import Config
+
 
 TEST_ROBUSTNESS = False
 to_show = True
 
 
-
-def replace_test_in_cfg(config_file,temp_cnfig,test_imgs_dir,test_annotations):
-    cfg = Config.fromfile(config_file)
-    cfg['test_dataloader']['dataset']['data_root'] = ''
-    cfg['test_dataloader']['dataset']['data_prefix'] = {'img': test_imgs_dir}
-    cfg['test_dataloader']['dataset']['ann_file'] = test_annotations
-    cfg['test_evaluator']['ann_file'] = test_annotations
-    cfg.dump(temp_cnfig)
 
 
 
